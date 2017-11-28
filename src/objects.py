@@ -1,15 +1,18 @@
 import numpy as np
 
-import simanager as sm
+from core import earray
 
 
 class Aircraft:
 
     def __init__(self, model, x, controllers=None):
 
+        # EOM model
         self.model = model(x, self)
-        # This is a place for defining aircraft specific attributes
-        # such as mass, tensor of inertia, aerodynamical coeffs, etc.
+
+        # Controllers
+        if controllers is None:
+            self.controllers = []
 
     @property
     def x(self):
@@ -28,24 +31,19 @@ class Aircraft:
 
         return np.array([1.0])
 
-    def __call__(self):
-        """Run simulation"""
+    def __call__(self, t):
+        """Perform a single simulation step, up to the time point t."""
 
-        with sm.Manager(self.model.solver) as manager:
+        # Solve objects equations of motion (up to the time point t)
+        # and capture the trace data
+        state_and_signals = self.model.step(t)
 
-            for t_bound in manager:
+        # Update controllers' signals
+        for controller in self.controllers:
 
-                self.model.step(t_bound)
+            state_and_signals += earray(
+                (t, *controller.output), controller.dtype)
 
-                # Here is a place for update control signals by
-                # calling the appropriate controllers objects. The
-                # list of controllers should be supplied by the
-                # simanager.
+            controller.update(self)
 
-                # Controllers will be operating according to a given
-                # flight plan
-
-                if sm.verbose:
-                    print("Solver {}, step {}), t={}, x={}".format(
-                        self.model.solver.status, manager.nsteps,
-                        self.model.solver.t, self.x))
+        return state_and_signals

@@ -6,17 +6,16 @@ from models import SimpleTestModel
 
 # Advanced configuration can be done through the simanager module. Look
 # inside the module file to see what sort of setup is possible.
-import simanager
+import simulation
 
 # Set verbose to True to see the simulation output
-simanager.verbose = True
+simulation.parameters.verbose = True
 
 # Set step_size
-simanager.step_size = 0.01
+simulation.parameters.step_size = 0.01
 
 # Create Aircraft instance
 vehicle = Aircraft(SimpleTestModel, np.array([0.0]))
 
-# Aircraft instance is callable! To run simulation simply
-# call the instance.
-vehicle()
+# Run simulation
+simulation.run(vehicle)

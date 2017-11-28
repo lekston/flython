@@ -1,6 +1,8 @@
 import numpy as np
 
-import simanager as sm
+import simulation
+
+from core import earray
 
 
 class Model:
@@ -8,19 +10,25 @@ class Model:
     in the state space.
 
     """
+    dtype = NotImplemented
+
     def __init__(self, f, x):
 
-        self.solver = sm.solver(f, sm.t_beg, x, sm.t_end)
+        self.solver = simulation.parameters.solver(
+            f, simulation.parameters.t_beg, x, simulation.parameters.t_end)
 
-    def step(self, t_bound):
+    def step(self, t):
 
-        while self.solver.t < t_bound:
+        register = earray([])
 
-            self.solver.max_step = t_bound - self.solver.t
+        while self.solver.t < t:
+
+            self.solver.max_step = t - self.solver.t
             self.solver.step()
 
-            if sm.verbose:
-                print("Internal step with t={}".format(self.solver.t))
+            register += earray((self.solver.t, *self.solver.y), self.dtype)
+
+        return register
 
 
 class SimpleTestModel(Model):
@@ -28,13 +36,15 @@ class SimpleTestModel(Model):
     purposes
 
     """
+    dtype = [('t', '<f8'), ('x', '<f8')]
+
     def __init__(self, x, obj):
 
         def f(t, x):
             u = obj.forces_and_moments(t, x)
             return -x + u
 
-        super().__init__(f, x,)
+        super().__init__(f, x)
 
 
 class SimplifiedLongitudinalmotion(Model):
