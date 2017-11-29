@@ -1,53 +1,26 @@
 import numpy as np
 
-import simulation
-
-from core import earray
+import simulation.solver
 
 
-class Model:
-    """Base class for handling mathematical model of a system, represented
-    in the state space.
+class SimpleMotor(simulation.solver.Solver):
+    """Simple second order model of a DC motor (for testing purposes)"""
 
-    """
-    dtype = NotImplemented
-
-    def __init__(self, f, x):
-
-        self.solver = simulation.parameters.solver(
-            f, simulation.parameters.t_beg, x, simulation.parameters.t_end)
-
-    def step(self, t):
-
-        register = earray([])
-
-        while self.solver.t < t:
-
-            self.solver.max_step = t - self.solver.t
-            self.solver.step()
-
-            register += earray((self.solver.t, *self.solver.y), self.dtype)
-
-        return register
-
-
-class SimpleTestModel(Model):
-    """Simple first order differential equation (dx = -x + u), for testing
-    purposes
-
-    """
-    dtype = [('t', '<f8'), ('x', '<f8')]
-
-    def __init__(self, x, obj):
+    def __init__(self, x, system):
 
         def f(t, x):
-            u = obj.forces_and_moments(t, x)
-            return -x + u
+
+            u = system.extern(t, x)
+
+            x[0] = x[1]
+            x[1] = u - x[1]
+
+            return x
 
         super().__init__(f, x)
 
 
-class SimplifiedLongitudinalmotion(Model):
+class SimplifiedLongitudinalMotion(simulation.solver.Solver):
     """Simplified model of the longitudinal motion.
 
     In the scenario under consideration certain simplifications are

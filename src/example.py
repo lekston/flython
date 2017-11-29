@@ -1,21 +1,42 @@
+#!/opt/local/bin/python
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-from objects import Aircraft
-from models import SimpleTestModel
+import simulation.api as sim
 
-# Advanced configuration can be done through the simanager module. Look
-# inside the module file to see what sort of setup is possible.
-import simulation
+from continuous import Motor
+from models import SimpleMotor
 
-# Set verbose to True to see the simulation output
-simulation.parameters.verbose = True
+from discrete import P, Planner
 
-# Set step_size
-simulation.parameters.step_size = 0.01
+# Set simulation parameters
+sim.parameters.solver = 'RK45'
+sim.parameters.t_end = 10
+sim.parameters.step_size = 0.01
 
-# Create Aircraft instance
-vehicle = Aircraft(SimpleTestModel, np.array([0.0]))
+# Define fmodel
+motor = Motor(SimpleMotor, np.array([0, 0]))
+planner = Planner(np.array([1]))
+controller = P(np.array([2.]))
+
+
+def fmodel(t):
+
+    phi = motor.y
+    x = motor.x
+    ref = planner(t, x)
+    err = ref - phi
+    u = controller(t, err)
+    tm, xm = motor(t, u)
+
+    # Tutaj zwrócić dane do logownia
+    return tm, xm
 
 # Run simulation
-simulation.run(vehicle)
+simdata = sim.run(fmodel)
+
+# Plot data
+plt.figure()
+plt.plot(simdata['t'], simdata['phi'])
+plt.step(simdata['t'], simdata['u'])
+plt.show()
