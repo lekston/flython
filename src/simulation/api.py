@@ -24,3 +24,8 @@ def run(*fmodels):
                 X.append(b)
 
     return T, X
+
+
+# TODO: 
+def log():
+    pass

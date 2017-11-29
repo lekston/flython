@@ -27,10 +27,13 @@ def fmodel(t):
     ref = planner(t, x)
     err = ref - phi
     u = controller(t, err)
-    tm, xm = motor(t, u)
+    T, X = motor(t, u)
 
-    # Tutaj zwrócić dane do logownia
-    return tm, xm
+    return sim.log(T,
+                   [X, motor.dtype],
+                   [u, controller.dtype],
+                   [ref, planner.dtype])
+
 
 # Run simulation
 simdata = sim.run(fmodel)
