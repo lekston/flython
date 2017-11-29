@@ -1,3 +1,2 @@
-To start run python console in a `src` directory and type `import
-example`.
+To start, in terminal go to `src` directory and run `example.py`.
 
