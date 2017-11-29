@@ -12,7 +12,7 @@ from discrete import P, Planner
 # Set simulation parameters
 sim.parameters.solver = 'RK45'
 sim.parameters.t_end = 10
-sim.parameters.step_size = 0.01
+sim.parameters.step_size = 0.5
 
 # Define fmodel
 motor = Motor(SimpleMotor, np.array([0, 0]))

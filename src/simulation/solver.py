@@ -3,23 +3,28 @@ import simulation.parameters as parameters
 
 
 class Solver:
-    """Default simulation solver class"""
+    """The class defines a global default solver used (by all continuous
+    objects) during a single simulation.
 
-    def __init__(self, f, x):
-
-        solver = getattr(scipy.integrate, parameters.solver)
-        self.solver = solver(f, parameters.t_beg, x, parameters.t_end)
+    """
 
     def step(self, t):
 
-        tarr = []
-        xarr = []
+        if not self.solver:
+            solver = getattr(scipy.integrate, parameters.solver)
+            self.solver = solver(self.f,
+                                 parameters.t_beg,
+                                 self.initial_conditions,
+                                 parameters.t_end)
+
+        T = []
+        X = []
 
         while self.solver.t < t:
 
             self.solver.max_step = t - self.solver.t
             self.solver.step()
-            tarr.append(self.solver.t)
-            xarr.append(self.solver.y)
+            T.append(self.solver.t)
+            X.append(self.solver.y)
 
-        return tarr, xarr
+        return T, X

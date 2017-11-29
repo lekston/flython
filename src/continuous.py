@@ -3,22 +3,20 @@ import numpy as np
 
 class Continuous:
 
-    @property
-    def x(self):
-        return self.model.solver.y
-
     def __call__(self, t, u):
         """Perform a single simulation step, up to the time point t."""
 
         # Due to the solver requirements the input signals must be
-        # passed indirectly using the self._u attribute
-        self._u = u
+        # passed indirectly using the self.u attribute
+        self.u = u
 
         # Solve equations of motion (up to the time point t) and
         # capture the trajectories
-        t, x = self.model.step(t)
+        T, X = self.model.step(t)
+        self.x = X[-1]
+        self.y = self.model.g(self.x)
 
-        return t, x
+        return T, X
 
 
 class Motor(Continuous):
@@ -27,16 +25,13 @@ class Motor(Continuous):
 
     def __init__(self, model, x):
 
-        # Placeholder for the current value of the system inputs
-        self._u = np.array([0])
-
         # System dynamics model in a state space representation
         self.model = model(x, self)
+        self.u = None
+        self.x = x
+        self.y = self.model.g(x)
+        self.initial_conditions = x
 
-    def extern(self, t, x):
+    def force(self, t, x):
 
-        return self._u
-
-    @property
-    def y(self):
-        return self.x[0]
+        return self.u

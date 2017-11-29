@@ -10,14 +10,22 @@ class SimpleMotor(simulation.solver.Solver):
 
         def f(t, x):
 
-            u = system.extern(t, x)
+            dx = np.zeros(x.shape)
+            u = system.force(t, x)
 
-            x[0] = x[1]
-            x[1] = u - x[1]
+            dx[0] = x[1]
+            dx[1] = u - x[1]
 
-            return x
+            return dx
 
-        super().__init__(f, x)
+        def g(x):
+
+            return x[0]
+
+        self.solver = None
+        self.f = f
+        self.g = g
+        self.initial_conditions = x
 
 
 class SimplifiedLongitudinalMotion(simulation.solver.Solver):
