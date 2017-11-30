@@ -42,25 +42,48 @@ class Logger:
         self.data = None
         self.offset = 0
 
+    def __enter__(self):
+        return self
+
     def __call__(self, data):
-        step = len(data)
+
+        T, *data = data
+        # Number of rows
+        nrows = T.shape[0]
+
+        # Begin with time array
+        array = np.array(T).reshape((-1, 1))
+        dtype = [('t', '<f8')]
+
+        for el in data:
+
+            if el[0].shape[0] == nrows:
+                if el[0].ndim == 1:
+                    array = np.concatenate((array, el[0].reshape((-1, 1))), 1)
+                else:
+                    array = np.concatenate((array, el[0]), 1)
+            elif el[0].shape[0] == 1:
+                # ZOH interpolation
+                array = np.concatenate((array, el[0]*np.ones((nrows, 1))), 1)
+
+            dtype += el[1]
+
+        data = np.array(list(zip(*array.T)), dtype)
+
         try:
-            if len(self.data) < self.offset + step:
+            if len(self.data) < self.offset + nrows:
                 # Expand data
                 self.data = np.append(
                     self.data, np.empty(self.chunk, self.data.dtype))
         except TypeError:
             # Estimate chunk
-            self.chunk = max(self.chunk, 100*step)
+            self.chunk = max(self.chunk, 100*nrows)
             # Create an empty array given the data dtype
             self.data = np.empty(self.chunk, data.dtype)
 
         # Store data
-        self.data[self.offset:self.offset+step] = data
-        self.offset += step
-
-    def __enter__(self):
-        return self
+        self.data[self.offset:self.offset+nrows] = data
+        self.offset += nrows
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.data = self.data[:self.offset]

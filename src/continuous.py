@@ -30,7 +30,6 @@ class Motor(Continuous):
         self.u = None
         self.x = x
         self.y = self.model.g(x)
-        self.initial_conditions = x
 
     def force(self, t, x):
 

@@ -20,6 +20,8 @@ class P:
 
 class Planner:
 
+    dtype = [('r', '<f8')]
+
     def __init__(self, plan):
 
         self.plan = plan

@@ -8,24 +8,18 @@ import simulation.parameters as parameters
 def run(*fmodels):
     """Run simulation with given models"""
 
-    # Docelowo tutaj włączony zostanie menadżer logowania
-    T = []
-    X = []
+    data = []
 
     for fmodel in fmodels:
 
-        with _m.SimulationManager() as simulation_manager:
+        with _m.Logger() as log:
 
-            for t in simulation_manager:
+            with _m.SimulationManager() as simulation_manager:
 
-                a, b = fmodel(t)
+                for t in simulation_manager:
 
-                T.append(a)
-                X.append(b)
+                    log(fmodel(t))
 
-    return T, X
+        data.append(log.data)
 
-
-# TODO: 
-def log():
-    pass
+    return data

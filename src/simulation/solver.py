@@ -27,4 +27,5 @@ class Solver:
             T.append(self.solver.t)
             X.append(self.solver.y)
 
-        return T, X
+        import numpy as np
+        return np.array(T), np.array(X)
