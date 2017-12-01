@@ -1,20 +1,25 @@
 import numpy as np
 
-import simulation.solver
+import library.continuous
 
 
-class SimpleMotor(simulation.solver.Solver):
+class SimpleMotor(library.continuous.Continuous):
     """Simple second order model of a DC motor (for testing purposes)"""
 
-    def __init__(self, x, system):
+    dtype = [('phi', '<f8'), ('dphi', '<f8')]
+
+    def __init__(self, x, **parameters):
+
+        self._manager = None
+        self._solver = None
 
         def f(t, x):
 
             dx = np.zeros(x.shape)
-            u = system.force(t, x)
+            u = self.u
 
             dx[0] = x[1]
-            dx[1] = u - x[1]
+            dx[1] = u - parameters['friction']*x[1]
 
             return dx
 
@@ -22,13 +27,16 @@ class SimpleMotor(simulation.solver.Solver):
 
             return x[0]
 
-        self.solver = None
         self.f = f
         self.g = g
         self.initial_conditions = x
 
+        self.u = None
+        self.x = x
+        self.y = self.g(x)
 
-class SimplifiedLongitudinalMotion(simulation.solver.Solver):
+
+class SimplifiedLongitudinalMotion(library.continuous.Continuous):
     """Simplified model of the longitudinal motion.
 
     In the scenario under consideration certain simplifications are

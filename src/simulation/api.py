@@ -1,4 +1,4 @@
-import simulation.managers as _m
+import simulation as _simulation
 
 # Import for an interactive session as a shortcut to simulation
 # parameters
@@ -12,9 +12,9 @@ def run(*fmodels):
 
     for fmodel in fmodels:
 
-        with _m.Logger() as log:
+        with _simulation.Logger() as log:
 
-            with _m.SimulationManager() as simulation_manager:
+            with _simulation.SimulationManager() as simulation_manager:
 
                 for t in simulation_manager:
 

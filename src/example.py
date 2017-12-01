@@ -5,20 +5,19 @@ import matplotlib.pyplot as plt
 
 import simulation.api as sim
 
-from continuous import Motor
-from models import SimpleMotor
-
-from discrete import P, Planner
+from library.continuous.models import SimpleMotor
+from library.discrete import Planner
+from library.discrete.controllers import P
 
 # Set simulation parameters
 sim.parameters.solver = 'RK45'
-sim.parameters.t_end = 10
-sim.parameters.step_size = 1
+sim.parameters.t_end = 50
+sim.parameters.step_size = .01
 
 # Define fmodel
-motor = Motor(SimpleMotor, np.array([0, 0]))
-planner = Planner(np.array([1]))
-controller = P(np.array([1.]))
+motor = SimpleMotor(np.zeros(2), friction=1)
+planner = Planner(setpoint=1)
+controller = P(gain=1)
 
 
 def fmodel(t):
@@ -30,7 +29,7 @@ def fmodel(t):
     u = controller(t, err)
     T, X = motor(t, u)
 
-    return (T,
+    return ([T, [('t', '<f8')]],
             [X, motor.dtype],
             [u, controller.dtype],
             [ref, planner.dtype])
@@ -42,7 +41,7 @@ simdata = sim.run(fmodel)
 # Plot data
 plt.figure()
 plt.plot(simdata[0]['t'], simdata[0]['phi'], marker='o')
-plt.step(simdata[0]['t'], simdata[0]['u1'])
+plt.step(simdata[0]['t'], simdata[0]['u'])
 plt.step(simdata[0]['t'], simdata[0]['r'])
 plt.grid()
 plt.show()
