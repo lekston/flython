@@ -47,6 +47,8 @@ class Logger:
 
     def __call__(self, data):
 
+        array, dtype = None, None
+
         for el in data:
 
             # Ensure 2D ndarray
@@ -61,7 +63,7 @@ class Logger:
                 array = np.concatenate((array, el[0]), 1)
                 dtype += el[1]
 
-            except UnboundLocalError:
+            except AttributeError:
                 array, dtype = el
 
         data = np.array(list(zip(*array.T)), dtype)
