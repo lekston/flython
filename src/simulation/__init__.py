@@ -10,7 +10,7 @@ class SimulationManager:
 
         self.t_beg = parameters.t_beg
         self.t_end = parameters.t_end
-        self.step_size = parameters.step_size
+        self.sample_time = parameters.sample_time
 
     def __enter__(self):
 
@@ -19,7 +19,7 @@ class SimulationManager:
     def __iter__(self):
 
         for n in count(1, 1):
-            t = self.t_beg + n * self.step_size
+            t = self.t_beg + n * self.sample_time
             if t < self.t_end:
                 yield(t)
             else:
@@ -38,7 +38,7 @@ class Logger:
 
         # Initial estimate of chunk
         self.chunk = np.int(np.ceil(
-            (parameters.t_end - parameters.t_beg) / parameters.step_size))
+            (parameters.t_end - parameters.t_beg) / parameters.sample_time))
         self.data = None
         self.offset = 0
 

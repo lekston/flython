@@ -12,7 +12,7 @@ from library.discrete.controllers import P
 # Set simulation parameters
 sim.parameters.solver = 'RK45'
 sim.parameters.t_end = 50
-sim.parameters.step_size = .01
+sim.parameters.sample_time = .01
 
 # Define fmodel
 motor = SimpleMotor(np.zeros(2), friction=1)
