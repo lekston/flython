@@ -10,9 +10,6 @@ class SimpleMotor(library.continuous.Continuous):
 
     def __init__(self, x, **parameters):
 
-        self._manager = None
-        self._solver = None
-
         def f(t, x):
 
             dx = np.zeros(x.shape)
@@ -29,11 +26,8 @@ class SimpleMotor(library.continuous.Continuous):
 
         self.f = f
         self.g = g
-        self.initial_conditions = x
 
-        self.u = None
-        self.x = x
-        self.y = self.g(x)
+        super().__init__(x)
 
 
 class SimplifiedLongitudinalMotion(library.continuous.Continuous):

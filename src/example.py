@@ -6,18 +6,18 @@ import matplotlib.pyplot as plt
 import simulation.api as sim
 
 from library.continuous.models import SimpleMotor
-from library.discrete import Planner
+from library.discrete.planners import Constant
 from library.discrete.controllers import P
 
 # Set simulation parameters
 sim.parameters.solver = 'RK45'
-sim.parameters.t_end = 50
-sim.parameters.sample_time = .01
+sim.parameters.t_end = 10
+sim.parameters.sample_time = 1
 
 # Define fmodel
-motor = SimpleMotor(np.zeros(2), friction=1)
-planner = Planner(setpoint=1)
-controller = P(gain=1)
+motor = SimpleMotor(x=np.zeros(2), friction=1)
+controller = P(gain=1.0, sample_time=1)
+planner = Constant(setpoint=1.0, sample_time=2)
 
 
 def fmodel(t):

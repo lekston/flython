@@ -1,18 +1,22 @@
-import numpy as np
+import library.discrete
 
 
-class P:
+class P(library.discrete.Discrete):
 
     dtype = [('u', '<f8')]
 
-    def __init__(self, **parameters):
+    def __init__(self, gain, sample_time):
 
-        self.parameters = parameters
-        self.x = None
-        self.y = np.array([0])
+        def f(t, x):
+            pass
 
-    def __call__(self, t, u):
+        def g(x):
+            return self.gain * self.u
 
-        self.y = self.parameters['gain'] * u
+        self.f = f
+        self.g = g
 
-        return self.y
+        self.gain = gain
+        self.sample_time = sample_time
+
+        super().__init__()
