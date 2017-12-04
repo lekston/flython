@@ -5,20 +5,20 @@ import simulation as _simulation
 import simulation.parameters as parameters
 
 
-def run(*fmodels):
+def run(*models):
     """Run simulation with given models"""
 
     data = []
 
-    for fmodel in fmodels:
+    for model in models:
 
         with _simulation.Logger() as log:
 
-            with _simulation.SimulationManager() as simulation_manager:
+            with _simulation.SimulationManager(model) as simulation_manager:
 
                 for t in simulation_manager:
 
-                    log(fmodel(t))
+                    log(model(t))
 
         data.append(log.data)
 

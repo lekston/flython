@@ -16,27 +16,32 @@ sim.parameters.sample_time = 1
 
 # Define fmodel
 motor = SimpleMotor(x=np.zeros(2), friction=1)
-controller = P(gain=1.0, sample_time=1)
-planner = Constant(setpoint=1.0, sample_time=2)
+controller = P(gain=1.0)
+planner = Constant(setpoint=1.0)
 
 
-def fmodel(t):
+class Model:
 
-    phi = motor.y
-    x = motor.x
-    ref = planner(t, x)
-    err = ref - phi
-    u = controller(t, err)
-    T, X = motor(t, u)
+    contains = [motor, controller, planner]
 
-    return ([T, [('t', '<f8')]],
-            [X, motor.dtype],
-            [u, controller.dtype],
-            [ref, planner.dtype])
+    @classmethod
+    def __call__(cls, t):
+
+        phi = motor.y
+        x = motor.x
+        ref = planner(t, x)
+        err = ref - phi
+        u = controller(t, err)
+        T, X = motor(t, u)
+
+        return ([T, [('t', '<f8')]],
+                [X, motor.dtype],
+                [u, controller.dtype],
+                [ref, planner.dtype])
 
 
 # Run simulation
-simdata = sim.run(fmodel)
+simdata = sim.run(Model)
 
 # Plot data
 plt.figure()

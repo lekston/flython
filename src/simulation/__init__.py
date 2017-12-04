@@ -3,14 +3,23 @@ import simulation.parameters as parameters
 
 from itertools import count
 
+import library.discrete
+
 
 class SimulationManager:
 
-    def __init__(self):
+    def __init__(self, model):
 
         self.t_beg = parameters.t_beg
         self.t_end = parameters.t_end
         self.sample_time = parameters.sample_time
+
+        import pdb; pdb.set_trace()
+        
+        for obj in model.contains:
+
+            if isinstance(obj, library.discrete.Discrete):
+                print('Jest')
 
     def __enter__(self):
 
