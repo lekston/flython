@@ -1,5 +1,4 @@
 import scipy.integrate
-import simulation.parameters as parameters
 
 
 class Continuous:
@@ -7,11 +6,12 @@ class Continuous:
 
     def __init__(self, x=None, u=None):
 
-        self._simulation = None
-        self._solver = None
-
         self.u = u
         self.x = x
+
+        # Attributes initialized by the simulation manager
+        self._manager = None
+        self._solver = None
 
     @property
     def y(self):
@@ -34,11 +34,11 @@ class Continuous:
     def _step(self, t):
 
         if not self._solver:
-            solver = getattr(scipy.integrate, parameters.solver)
+            solver = getattr(scipy.integrate, self._manager.solver)
             self._solver = solver(self.f,
-                                  parameters.t_beg,
+                                  self._manager.t.beg,
                                   self.x,
-                                  parameters.t_end)
+                                  self._manager.t.end)
 
         T = []
         X = []

@@ -3,16 +3,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-import simulation.api as sim
+import simulation
 
 from library.continuous.models import SimpleMotor
 from library.discrete.planners import Constant
 from library.discrete.controllers import P
 
 # Set simulation parameters
-sim.parameters.solver = 'RK45'
-sim.parameters.t_end = 10
-sim.parameters.sample_time = 1
+simulation.parameters.solver = 'RK45'
+simulation.parameters.t_end = 10
+simulation.parameters.sample_time = 1
 
 # Define fmodel
 motor = SimpleMotor(x=np.zeros(2), friction=1)
@@ -24,8 +24,8 @@ class Model:
 
     contains = [motor, controller, planner]
 
-    @classmethod
-    def __call__(cls, t):
+    @staticmethod
+    def signal_flow(t):
 
         phi = motor.y
         x = motor.x
@@ -40,8 +40,8 @@ class Model:
                 [ref, planner.dtype])
 
 
-# Run simulation
-simdata = sim.run(Model)
+sim = simulation.Manager(Model)
+simdata = sim.run()
 
 # Plot data
 plt.figure()
