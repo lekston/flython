@@ -10,38 +10,33 @@ import simulation.parameters as parameters
 class Time:
 
     def __init__(self, t_beg, t_end, step):
+
         self.beg = t_beg
         self.end = t_end
-        self.stop = t_end
         self.step = step
-        self.n = 0
+
+        self._N = round((self.end - self.beg) / self.step)
+        self._S = self._N
+        self._n = 0
 
     def __next__(self):
 
-        t = self.beg + (self.n + 1) * self.step
-
-        if t > self.stop:
+        if self._n > self._S - 1:
             raise StopIteration
 
-        self.n += 1
+        self._n += 1
 
-        if t < self.stop:
-            return t
-        else:
-            return self.stop
+        return self.beg + self._n * self.step
 
     def __iter__(self):
         return self
 
-    def __call__(self, stop=None):
+    def __call__(self, S=None):
 
-        if not stop:
-            stop = self.beg + (self.n + 1) * self.step
+        self._S = self._n + 1 if not S else round((S - self.beg) / self.step)
 
-        if stop > self.end:
-            stop = self.end
-
-        self.stop = stop
+        if self._S > self._N:
+            self._S = self._N
 
         return self
 

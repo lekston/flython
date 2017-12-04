@@ -40,7 +40,7 @@ class Model:
                 [ref, planner.dtype])
 
 
-sim = simulation.Manager(Model)
+sim = simulation.Simulation(Model)
 simdata = sim.run()
 
 # Plot data
