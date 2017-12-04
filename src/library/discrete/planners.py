@@ -16,6 +16,4 @@ class Constant(library.discrete.Discrete):
         self.f = f
         self.g = g
 
-        self.sample_time = sample_time
-
-        super().__init__(x=setpoint)
+        super().__init__(x=setpoint, sample_time=sample_time)

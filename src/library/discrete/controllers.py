@@ -8,15 +8,12 @@ class P(library.discrete.Discrete):
     def __init__(self, gain, sample_time):
 
         def f(t, x):
-            pass
+            return x
 
         def g(x):
-            return self.gain * self.u
+            return x * self.u
 
         self.f = f
         self.g = g
 
-        self.gain = gain
-        self.sample_time = sample_time
-
-        super().__init__()
+        super().__init__(x=gain, sample_time=sample_time)
