@@ -5,7 +5,7 @@ class Constant(library.discrete.Discrete):
 
     dtype = [('r', '<f8')]
 
-    def __init__(self, setpoint, sample_time):
+    def __init__(self, setpoint, sample_time=-1):
 
         def f(t, x):
             return x
