@@ -5,7 +5,7 @@ from library.rotations import Rbv, Rbs
 
 class Birde:
 
-    # Mass & Inertia
+    # Mass
     mass = 2.3  # kg
     # Geometry
     Sw = 0.455  # m2
@@ -50,8 +50,8 @@ class Birde:
         vel_body = x[0:2]
         theta = x[3]
 
-        # Input vector u consists of thrust T, pitching moment M and
-        # wind velocity in vehicle-carried axes system
+        # Input vector u consists of thrust T, pitch moment M and wind
+        # velocity in vehicle-carried axes system
         T, M, *wind_vel = u
 
         # Transform wind velocity to body axes system
