@@ -42,7 +42,7 @@ class SimplifiedLongitudinalMotion(library.continuous.Continuous):
 
     """
 
-    def __init__(self, x, obj):
+    def __init__(self, x, vehicle):
 
         def f(t, x):
             """Simplified state-space model of the aircraft longitudinal motion
@@ -61,21 +61,21 @@ class SimplifiedLongitudinalMotion(library.continuous.Continuous):
                 x[5] is the linear velocity component z(t) in Earth axes
 
             """
-        
-            Fx, Fz, M = obj.forces_and_moments()
-        
+
+            Fx, Fz, M = vehicle.external_inputs(x, self.u)
+
             u, w, q, theta = x[0:4]
-        
+
             # Linear momentum equations
-            du = Fx / obj.mass - q * w
-            dw = Fz / obj.mass + q * u
+            du = Fx / vehicle.mass - q * w
+            dw = Fz / vehicle.mass + q * u
             dq = M
-        
+
             dtheta = q
-        
+
             dx = np.cos(theta) * u + np.sin(theta) * w
             dz = -np.sin(theta) * u + np.cos(theta) * w
-        
+
             return np.array([du, dw, dq, dtheta, dx, dz])
 
         super().__init__(f, x)
