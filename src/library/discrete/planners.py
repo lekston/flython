@@ -4,35 +4,43 @@ from collections import namedtuple
 
 import library.discrete
 
+from core import pslots
+
 WaypointXZ = namedtuple('Waypoint', ['x', 'z'])
 WaypointXY = namedtuple('Waypoint', ['x', 'y'])
 WaypointXYZ = namedtuple('Waypoint', ['x', 'y', 'z'])
 
 
-class Constant(library.discrete.Discrete):
+class Constant(library.discrete.Static):
 
     dtype = [('r', '<f8')]
 
     def __init__(self, setpoint, sample_time=-1):
 
-        super().__init__(x=setpoint, sample_time=sample_time)
+        self.parameters = pslots(
+            setpoint=setpoint, sample_time=sample_time)
+
+        def g(x, u):
+            return self.parameters.setpoint
+
+        super().__init__(g=g)
 
 
-class FlightplanXZ(library.discrete.Discrete):
+class FlightplanXZ(library.discrete.Static):
 
     dtype = [('xr', '<f8'), ('zr', '<f8')]
 
     def __init__(self, plan, sample_time=-1):
 
+        self.parameters = pslots(
+            plan=plan, sample_time=sample_time)
+
         self.xinterp = np.array([waypoint.x for waypoint in plan])
         self.zinterp = np.array([waypoint.z for waypoint in plan])
 
-        def f(t, x):
+        def g(x, u):
 
-            x_vehicle = self.u
-            return np.array([
-                x_vehicle,
-                np.interp(x_vehicle, self.xinterp, self.zinterp)
-            ])
+            # u contains x_vehicle
+            return np.array([u, np.interp(u, self.xinterp, self.zinterp)])
 
-        super().__init__(f=f, sample_time=sample_time)
+        super().__init__(g=g)
