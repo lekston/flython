@@ -45,7 +45,7 @@ class Birde:
     @classmethod
     def external_inputs(cls, x, u):
 
-        rho = None
+        rho = 1.225
 
         vel_body = x[0:2]
         theta = x[3]

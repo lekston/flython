@@ -16,7 +16,7 @@ simulation.parameters.sample_time = 1
 
 # Define fmodel
 motor = SimpleMotor(x=np.zeros(2), friction=1)
-controller = P(gain=1.0)
+controller = P(Kp=1.0)
 planner = Constant(setpoint=1.0)
 
 
