@@ -1,11 +1,6 @@
-def parameters(field_names):
+def pslots(**kwargs):
 
-    try:
-        field_names = field_names.replace(',', ' ').split()
-    except AttributeError:  # no .replace or .split
-        # assume it's already a sequence of identifiers field_names =
-        # tuple(field_names)
-        pass
+    field_names = tuple(name for name in kwargs.keys())
 
     def __init__(self, *args, **kwargs):
         attrs = dict(zip(self.__slots__, args))
@@ -26,4 +21,4 @@ def parameters(field_names):
                      __iter__=__iter__,
                      __repr__=__repr__)
 
-    return type('parameters', (object,), cls_attrs)
+    return type('parameters', (object,), cls_attrs)(**kwargs)
