@@ -4,7 +4,14 @@ from itertools import count
 
 import library.continuous
 import library.discrete
-import simulation.parameters as parameters
+
+from core import pslots
+
+parameters = pslots(
+    solver='RK45',
+    t_beg=0.0,
+    t_end=10,
+    sample_time=0.01)
 
 
 class Time:
@@ -61,8 +68,8 @@ class Simulation:
                 element._manager = self
             # Inherit sample_time
             elif isinstance(element, library.discrete.Discrete):
-                if element.sample_time == -1:
-                    element.sample_time = self.t.step
+                if element.parameters.sample_time == -1:
+                    element.parameters.sample_time = self.t.step
 
     def step(self):
         return self.__call__(self.t())
