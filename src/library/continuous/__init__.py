@@ -1,5 +1,7 @@
 import scipy.integrate
 
+import numpy as np
+from scipy.integrate import RK45
 
 class Continuous:
     """Solver class for all continuous models"""
@@ -45,6 +47,8 @@ class Continuous:
 
         while self._solver.t < t:
 
+            if np.nextafter(t, t-1) <= self._solver.t <= np.nextafter(t, t+1):
+                break
             self._solver.max_step = t - self._solver.t
             self._solver.step()
             T.append(self._solver.t)

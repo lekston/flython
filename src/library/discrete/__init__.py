@@ -3,7 +3,18 @@ import numpy as np
 
 class Discrete:
 
-    def __init__(self, x=None, u=None, f=lambda t, x, u: x, g=lambda x, u: x):
+    def __init__(self, x=None, u=None, f=lambda t, x, u: x, g=lambda
+                 x, u: x, **parameters):
+
+        for name in self._parameters:
+            try:
+                setattr(self, name, parameters[name])
+            except KeyError:
+                if name == 'sample_time':
+                    self.sample_time = -1
+                else:
+                    raise TypeError("{}() required parameter missing: '{}'".
+                                    format(self.__class__.__name__, name))
 
         self._simulation = None
 
@@ -19,15 +30,18 @@ class Discrete:
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
-        if name in self.parameters:
-            self._recalculate_aux_vars()
+        if name in self._parameters:
+            try:
+                self._recalculate_aux_vars()
+            except AttributeError:
+                pass
 
 
 class Static(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.parameters.sample_time:
+        if t - self.last_call >= self.sample_time:
 
             self.u = u
             self.last_call = t
@@ -43,7 +57,7 @@ class NormalOrder(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.parameters.sample_time:
+        if t - self.last_call >= self.sample_time:
 
             self.u = u
             self.y = self.g(self.x, u)
@@ -57,7 +71,7 @@ class ReverseOrder(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.parameters.sample_time:
+        if t - self.last_call >= self.sample_time:
 
             self.u = u
             self.x = self.f(t, self.x, u)

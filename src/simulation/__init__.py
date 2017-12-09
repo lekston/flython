@@ -4,14 +4,7 @@ from itertools import count
 
 import library.continuous
 import library.discrete
-
-from core import pslots
-
-parameters = pslots(
-    solver='RK45',
-    t_beg=0.0,
-    t_end=10,
-    sample_time=0.01)
+import simulation.parameters as parameters
 
 
 class Time:
@@ -63,13 +56,15 @@ class Simulation:
         self.log = Logger(chunk)
 
         for element in self.model.contains:
+
             # Assign simulation
             if isinstance(element, library.continuous.Continuous):
                 element._manager = self
+                element._solver = None
             # Inherit sample_time
             elif isinstance(element, library.discrete.Discrete):
-                if element.parameters.sample_time == -1:
-                    element.parameters.sample_time = self.t.step
+                if element.sample_time == -1:
+                    element.sample_time = self.t.step
 
     def step(self):
         return self.__call__(self.t())

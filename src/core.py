@@ -9,7 +9,7 @@ def pslots(**kwargs):
             setattr(self, name, value)
 
     def __iter__(self):
-        return (name for name in self.__slots__)
+        return (getattr(self, name) for name in self.__slots__)
 
     def __repr__(self):
         values = ', '.join('{}={!r}'.format(n, getattr(self, n)) for n
