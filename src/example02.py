@@ -7,7 +7,7 @@ import simulation
 
 from library.continuous.models import SimpleMotor
 from library.discrete.planners import Constant
-from library.discrete.controllers import PID
+from library.discrete.controllers import PIrD
 
 # Set simulation parameters
 simulation.parameters.solver = 'RK45'
@@ -16,7 +16,7 @@ simulation.parameters.sample_time = .01
 
 # Define fmodel
 motor = SimpleMotor(x=np.zeros(2), friction=1)
-controller = PID(Kp=1, Ki=0.2, Kd=2)
+controller = PIrD(Kp=1, Ki=0, Kd=2)
 planner = Constant(setpoint=1.0)
 
 

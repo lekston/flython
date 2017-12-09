@@ -10,8 +10,8 @@ class Discrete:
             try:
                 setattr(self, name, parameters[name])
             except KeyError:
-                if name == 'sample_time':
-                    self.sample_time = -1
+                if name in self._default:
+                    setattr(self, name, self._default[name])
                 else:
                     raise TypeError("{}() required parameter missing: '{}'".
                                     format(self.__class__.__name__, name))

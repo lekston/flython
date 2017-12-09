@@ -13,6 +13,7 @@ class Constant(library.discrete.Static):
 
     dtype = [('r', '<f8')]
     _parameters = ['setpoint', 'sample_time']
+    _default = dict(sample_time=-1)
 
     def __init__(self, **parameters):
 
@@ -26,6 +27,7 @@ class FlightplanXZ(library.discrete.Static):
 
     dtype = [('xr', '<f8'), ('zr', '<f8')]
     _parameters = ['plan', 'sample_time']
+    _default = dict(sample_time=-1)
 
     def __init__(self, **parameters):
 
