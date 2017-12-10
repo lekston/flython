@@ -6,6 +6,9 @@ class Discrete:
     def __init__(self, x=None, u=None, f=lambda t, x, u: x, g=lambda
                  x, u: x, **parameters):
 
+        # Attributes initialized by the simulation manager
+        self._manager = None
+
         for name in self._parameters:
             try:
                 setattr(self, name, parameters[name])
@@ -16,17 +19,14 @@ class Discrete:
                     raise TypeError("{}() required parameter missing: '{}'".
                                     format(self.__class__.__name__, name))
 
-        self._simulation = None
-
         self.u = u
         self.x = x
-        self.last_call = -np.inf
-
         # f: the state transition function
         self.f = f
-
         # g: the output function
         self.g = g
+        # Last call
+        self.last_call = -np.inf
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)

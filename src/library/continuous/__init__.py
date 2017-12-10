@@ -1,19 +1,34 @@
 import scipy.integrate
 
 import numpy as np
-from scipy.integrate import RK45
+
 
 class Continuous:
-    """Solver class for all continuous models"""
+    """Base class for continuous models"""
 
-    def __init__(self, x=None, u=None):
-
-        self.u = u
-        self.x = x
+    def __init__(self, x, u=None, f=lambda t, x, u: x, g=lambda x, u: x,
+                 **parameters):
 
         # Attributes initialized by the simulation manager
         self._manager = None
         self._solver = None
+
+        for name in self._parameters:
+            try:
+                setattr(self, name, parameters[name])
+            except KeyError:
+                if name in self._default:
+                    setattr(self, name, self._default[name])
+                else:
+                    raise TypeError("{}() required parameter missing: '{}'".
+                                    format(self.__class__.__name__, name))
+
+        self.u = u
+        self.x = x
+        # f: the state transition function
+        self.f = f
+        # g: the output function
+        self.g = g
 
     @property
     def y(self):
@@ -22,19 +37,12 @@ class Continuous:
     def __call__(self, t, u):
         """Perform a single simulation step, up to the time point t."""
 
-        # Due to the solver requirements the input signals must be
-        # passed indirectly using the self.u attribute
+        # Assign input signal
         self.u = u
 
-        # Solve equations of motion (up to the time point t) and
-        # capture the trajectories
-        T, X = self._step(t)
-        self.x = X[-1]
-
-        return T, X
-
-    def _step(self, t):
-
+        T = []
+        X = []
+        # Run solver (up to the time point t) and store the results
         if not self._solver:
             solver = getattr(scipy.integrate, self._manager.solver)
             self._solver = solver(self.f,
@@ -42,16 +50,14 @@ class Continuous:
                                   self.x,
                                   self._manager.t.end)
 
-        T = []
-        X = []
-
         while self._solver.t < t:
-
             if np.nextafter(t, t-1) <= self._solver.t <= np.nextafter(t, t+1):
                 break
             self._solver.max_step = t - self._solver.t
             self._solver.step()
             T.append(self._solver.t)
             X.append(self._solver.y)
+
+        self.x = self._solver.y
 
         return T, X
