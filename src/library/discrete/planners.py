@@ -4,6 +4,11 @@ from collections import namedtuple
 
 import library.discrete
 
+# Windvectors
+WindvectorXZ = namedtuple('Windvector', ['x', 'Vx', 'Vz'])
+WindvectorXY = namedtuple('Windvector', ['x', 'y', 'Vx', 'Vy'])
+WindvectorXYZ = namedtuple('Windvector', ['x', 'y', 'z', 'Vx', 'Vy', 'Vz'])
+# Waypoints
 WaypointXZ = namedtuple('Waypoint', ['x', 'z'])
 WaypointXY = namedtuple('Waypoint', ['x', 'y'])
 WaypointXYZ = namedtuple('Waypoint', ['x', 'y', 'z'])
@@ -40,3 +45,28 @@ class FlightplanXZ(library.discrete.Static):
 
         self.xinterp = np.array([waypoint.x for waypoint in self.plan])
         self.zinterp = np.array([waypoint.z for waypoint in self.plan])
+
+
+class WindfieldXZ(library.discrete.Static):
+
+    dtype = [('Vx', '<f8'), ('Vz', '<f8')]
+    _parameters = ['field', 'scale_factor', 'noise_variance', 'sample_time']
+    _default = dict(scale_factor=1, noise_variance=0, sample_time=-1)
+
+    def __init__(self, **parameters):
+
+        def g(x, u):
+
+            # u contains x_vehicle
+            V = self.scale_factor * np.array([
+                np.interp(u, self.xinterp, self.Vxinterp),
+                np.interp(u, self.xinterp, self.Vzinterp)
+            ])
+
+            return V + self.noise_variance * np.random.randn(2)
+
+        super().__init__(g=g, **parameters)
+
+        self.xinterp = np.array([windvector.x for windvector in self.field])
+        self.Vxinterp = np.array([windvector.Vx for windvector in self.field])
+        self.Vzinterp = np.array([windvector.Vz for windvector in self.field])
