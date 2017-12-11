@@ -10,7 +10,7 @@ class Birde:
     # Geometry
     Sw = 0.455  # m2
     # CL, CD as a function of alpha
-    alpha = np.arange(-10, 13.5, .5)
+    alpha = np.deg2rad(np.arange(-10, 13.5, .5))
 
     CD = np.array([
         0.03429752, 0.03187472, 0.02963173, 0.02755451,
@@ -45,6 +45,7 @@ class Birde:
     @classmethod
     def external_inputs(cls, x, u):
 
+        g = 9.81
         rho = 1.225
 
         vel_body = x[0:2]
@@ -58,14 +59,14 @@ class Birde:
         wind_vel_body = Rbv(0, theta, 0).dot(wind_vel)
 
         # Velocity relative to air: aerodynamic velocity.
-        vel_aero = vel_body - wind_vel_body
+        vel_aero = vel_body - wind_vel_body[[0, 2]]
 
         # TAS and q_inf as a functions of aerodynamic velocity
         TAS = np.sqrt(vel_aero.dot(vel_aero))
         q_inf = 0.5 * rho * TAS ** 2
 
         # Alpha, CL and CD as a functions of aerodynamic velocity
-        alpha = np.atan(vel_aero[1] / vel_aero[0])
+        alpha = np.arctan(vel_aero[1] / vel_aero[0])
         CL = np.interp(alpha, cls.alpha, cls.CL)
         CD = np.interp(alpha, cls.alpha, cls.CD)
 
@@ -77,8 +78,9 @@ class Birde:
         # body axes system
         Fa = Rbs(alpha, 0).dot([-D, 0, -L])
 
+        Fg = Rbv(0, theta, 0).dot([0, 0, g * cls.mass])
         # Thrust acts in xb direction
-        Fx = Fa[0] + T
-        Fz = Fa[2]
+        Fx = Fa[0] + Fg[0] + T
+        Fz = Fa[2] + Fg[2]
 
         return Fx, Fz, M
