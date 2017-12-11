@@ -56,10 +56,9 @@ class Simulation:
         self.log = Logger(chunk)
 
         for element in self.model.contains:
-
+            element._manager = self
             # Assign simulation
             if isinstance(element, library.continuous.Continuous):
-                element._manager = self
                 element._solver = None
             # Inherit sample_time
             elif isinstance(element, library.discrete.Discrete):
