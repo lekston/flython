@@ -1,7 +1,5 @@
 import numpy as np
 
-from itertools import count
-
 import library.continuous
 import library.discrete
 import simulation.parameters as parameters
@@ -51,7 +49,7 @@ class Simulation:
                       parameters.t_end,
                       parameters.sample_time)
 
-        # Estimate chunk for logger
+        # Estimate chunk for the logger
         chunk = np.ceil((self.t.end - self.t.beg) / self.t.step)
         self.log = Logger(chunk)
 
@@ -77,25 +75,23 @@ class Simulation:
 
     def __call__(self, time):
 
-        with Logger() as log:
-
+        try:
             for t in time:
-                log(self.model.signal_flow(t))
+                self.log(self.model.signal_flow(t))
+        except Exception as exception_message:
+            print("Simulation aborted: '{}'".format(exception_message))
 
-        return [log.data]
+        return self.log.data[:self.log.offset]
 
 
 class Logger:
 
-    def __init__(self, chunk=200):
+    def __init__(self, chunk):
 
         # Initial estimate of chunk
         self.chunk = int(chunk)
         self.data = None
         self.offset = 0
-
-    def __enter__(self):
-        return self
 
     def __call__(self, data):
 
@@ -134,8 +130,3 @@ class Logger:
         # Store data
         self.data[self.offset:self.offset+array.shape[0]] = data
         self.offset += array.shape[0]
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.data = self.data[:self.offset]
-        if not exc_type:
-            return True

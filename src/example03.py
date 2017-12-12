@@ -50,8 +50,8 @@ simdata = simulation.Simulation(Model).run()
 # Plot data
 f = plt.figure()
 
-# plt.plot(simdata[0]['t'], np.sqrt(u**2 + w**2), marker='o')
-plt.plot(simdata[0]['x'], -simdata[0]['z'], marker='o',
+# plt.plot(simdata['t'], np.sqrt(u**2 + w**2), marker='o')
+plt.plot(simdata['x'], -simdata['z'], marker='o',
          label='Position of a vehicle in vehicle-carried frame')
 plt.xlabel('x coordinate')
 plt.ylabel('z coordinate')
@@ -60,20 +60,20 @@ f.axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
                  ncol=3, fancybox=True, shadow=True)
 
 f = plt.figure()
-# plt.plot(simdata[0]['t'], simdata[0]['z'], marker='o')
-u = simdata[0]['u']
-w = simdata[0]['w']
-plt.plot(simdata[0]['t'], simdata[0]['u'], label='$u(t)$')
-plt.plot(simdata[0]['t'], simdata[0]['w'], label='$w(t)$')
-plt.plot(simdata[0]['t'], np.sqrt(u**2 + w**2), label=r'$\mathrm{TAS}(t)$')
+# plt.plot(simdata['t'], simdata['z'], marker='o')
+u = simdata['u']
+w = simdata['w']
+plt.plot(simdata['t'], simdata['u'], label='$u(t)$')
+plt.plot(simdata['t'], simdata['w'], label='$w(t)$')
+plt.plot(simdata['t'], np.sqrt(u**2 + w**2), label=r'$\mathrm{TAS}(t)$')
 plt.xlabel('t')
 plt.ylabel(r'$u(t), w(t), \mathrm{TAS}(t)$')
 f.axes[0].legend()
 plt.grid()
 
 f = plt.figure()
-plt.plot(simdata[0]['t'], np.rad2deg(np.arctan(w / u)), label=r"$\alpha(t)$")
-plt.plot(simdata[0]['t'], np.rad2deg(simdata[0]['theta']),
+plt.plot(simdata['t'], np.rad2deg(np.arctan(w / u)), label=r"$\alpha(t)$")
+plt.plot(simdata['t'], np.rad2deg(simdata['theta']),
          label=r"$\Theta(t)$")
 plt.xlabel('t')
 plt.ylabel(r'$\alpha(t), \Theta(t)$')

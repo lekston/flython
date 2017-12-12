@@ -44,8 +44,8 @@ simdata = simulation.Simulation(Model).run()
 
 # Plot data
 plt.figure()
-plt.plot(simdata[0]['t'], simdata[0]['phi'], marker='o')
-plt.step(simdata[0]['t'], simdata[0]['u'])
-plt.step(simdata[0]['t'], simdata[0]['r'])
+plt.plot(simdata['t'], simdata['phi'], marker='o')
+plt.step(simdata['t'], simdata['u'])
+plt.step(simdata['t'], simdata['r'])
 plt.grid()
 plt.show()
