@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import simulation
 
 from library.continuous.models import SimplifiedLongitudinalMotion
-from library.discrete.planners import WaypointXZ, FlightplanXZ
-from library.discrete.planners import WindvectorXZ, WindfieldXZ
 from library.vehicles import Birde
 
 # Set simulation parameters
@@ -15,24 +13,6 @@ simulation.parameters.solver = 'RK45'
 simulation.parameters.t_end = 100
 simulation.parameters.sample_time = .01
 
-# Flight plan definition
-plan = [
-    WaypointXZ(0, 300),
-    WaypointXZ(500, 300),
-    WaypointXZ(700, 200),
-    WaypointXZ(1200, 200)
-]
-
-# Wind field definition
-field = [
-    WindvectorXZ(0, 0, 0),
-    WindvectorXZ(690, 1, 5),
-    WindvectorXZ(695, 2, 10),
-    WindvectorXZ(700, 3, 15),
-    WindvectorXZ(705, 2, 10),
-    WindvectorXZ(710, 1, 5),
-    WindvectorXZ(715, 0, 0),
-]
 # Initial conditions
 u0 = 20
 w0 = 2
@@ -44,8 +24,6 @@ x = np.array([u0, w0, q0, theta0, x0, z0])
 
 # Define Model
 vehicle = SimplifiedLongitudinalMotion(x, vehicle=Birde)
-flightplan = FlightplanXZ(plan=plan)
-windfield = WindfieldXZ(field=field)
 
 
 class Model:
@@ -56,7 +34,7 @@ class Model:
     def signal_flow(t):
 
         # u = [T, M, wind_vel]
-        u = [1.9, 0, 0, 0, 0]
+        u = [1.9, 0, 0, 0]
 
         T, X = vehicle(t, u)
 

@@ -56,10 +56,11 @@ class Birde:
         T, M, *wind_vel = u
 
         # Transform wind velocity to body axes system
-        wind_vel_body = Rbv(0, theta, 0).dot(wind_vel)
+        wind_vel_body = Rbv(0, theta, 0).dot([wind_vel[0], 0,
+                                              wind_vel[1]])[[0, 2]]
 
         # Velocity relative to air: aerodynamic velocity.
-        vel_aero = vel_body - wind_vel_body[[0, 2]]
+        vel_aero = vel_body - wind_vel_body
 
         # TAS and q_inf as a functions of aerodynamic velocity
         TAS = np.sqrt(vel_aero.dot(vel_aero))
