@@ -55,7 +55,7 @@ class Continuous:
                 break
             self._solver.max_step = t - self._solver.t
             self._solver.step()
-            T.append(self._solver.t)
+            T.append((self._solver.t, ))
             X.append(self._solver.y)
 
         self.x = self._solver.y

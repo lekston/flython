@@ -101,17 +101,14 @@ class Logger:
 
             # Ensure 2D ndarray
             el[0] = np.array(el[0])
-            if el[0].ndim <= 1:
-                el[0] = el[0].reshape((-1, 1))
-
             try:
-                if array.shape[0] != el[0].shape:
+                if el[0].ndim <= 1:
                     # ZOH interpolation
                     el[0] = el[0]*np.ones((array.shape[0], 1))
                 array = np.concatenate((array, el[0]), 1)
                 dtype += el[1]
 
-            except AttributeError:
+            except ValueError:
                 array, dtype = el
 
         data = np.array(list(zip(*array.T)), dtype)
