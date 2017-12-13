@@ -49,16 +49,26 @@ def Rbv(phi, theta, psi):
     elif not (psi_min <= psi <= psi_max):
         raise ValueError('Psi value is not inside correct range')
 
+    # this reduces run time by about 30% (sic!!)
+    s_phi = sin(phi)
+    c_phi = cos(phi)
+
+    s_th = sin(theta)
+    c_th = cos(theta)
+
+    s_psi = sin(psi)
+    c_psi = cos(psi)
+
     return np.array([
-        [cos(theta) * cos(psi),
-         cos(theta) * sin(psi),
-         -sin(theta)],
-        [sin(phi) * sin(theta) * cos(psi) - cos(phi) * sin(psi),
-         sin(phi) * sin(theta) * sin(psi) + cos(phi) * cos(psi),
-         sin(phi) * cos(theta)],
-        [cos(phi) * sin(theta) * cos(psi) + sin(phi) * sin(psi),
-         cos(phi) * sin(theta) * sin(psi) - sin(phi) * cos(psi),
-         cos(phi) * cos(theta)]
+        [c_th * c_psi,
+         c_th * s_psi,
+         -s_th],
+        [s_phi * s_th * c_psi - c_phi * s_psi,
+         s_phi * s_th * s_psi + c_phi * c_psi,
+         s_phi * c_th],
+        [c_phi * s_th * c_psi + s_phi * s_psi,
+         c_phi * s_th * s_psi - s_phi * c_psi,
+         c_phi * c_th]
     ])
 
 
@@ -79,15 +89,21 @@ def Rbs(alpha, beta):
     elif not (beta_min <= beta <= beta_max):
         raise ValueError('Beta value is not inside correct range')
 
+    # this reduces run time by another 10% (sic!!)
+    s_alpha = sin(alpha)
+    c_alpha = cos(alpha)
+    s_beta  = sin(beta)
+    c_beta  = cos(beta)
+
     # Transformation matrix from body to wind
     return np.array([
-        [cos(alpha) * cos(beta),
-         - cos(alpha) * sin(beta),
-         -sin(alpha)],
-        [sin(beta),
-         cos(beta),
+        [c_alpha * c_beta,
+         - c_alpha * s_beta,
+         -s_alpha],
+        [s_beta,
+         c_beta,
          0],
-        [sin(alpha) * cos(beta),
-         -sin(alpha) * sin(beta),
-         cos(alpha)]
+        [s_alpha * c_beta,
+         -s_alpha * s_beta,
+         c_alpha]
     ])
