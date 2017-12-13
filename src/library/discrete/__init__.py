@@ -29,19 +29,31 @@ class Discrete:
         self.last_call = -np.inf
 
     def __setattr__(self, name, value):
+
+        if name in self._parameters and self._manager:
+            raise Warning("An attempt to change the parameter"
+                          "during simulation detected")
+
         super().__setattr__(name, value)
-        if name in self._parameters:
-            try:
-                self._recalculate_aux_vars()
-            except AttributeError:
-                pass
+
+    def _validate(self, manager):
+
+        if (self.sample_time / self._manager.t.step) % 1:
+            raise ValueError("Incorrect sample time in: '{}'\n"
+                             "The sample time parameter value "
+                             "must be a multiple of the simulation "
+                             "sample time".format(self.__class__.__name__))
+
+        self.sampling_factor = self.sample_time / manager.t.step
+
+        self._manager = manager
 
 
 class Static(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.sample_time:
+        if t - self.last_call >= self.sampling_time:
 
             self.u = u
             self.last_call = t
@@ -57,11 +69,11 @@ class NormalOrder(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.sample_time:
+        if t - self.last_call >= self.sampling_time:
 
             self.u = u
-            self.y = self.g(self.x, u)
             self.x = self.f(t, self.x, u)
+            self.y = self.g(self.x, u)
             self.last_call = t
 
         return self.y
@@ -71,11 +83,11 @@ class ReverseOrder(Discrete):
 
     def __call__(self, t, u):
 
-        if t - self.last_call >= self.sample_time:
+        if t - self.last_call >= self.sampling_time:
 
             self.u = u
-            self.x = self.f(t, self.x, u)
             self.y = self.g(self.x, u)
+            self.x = self.f(t, self.x, u)
             self.last_call = t
 
         return self.y

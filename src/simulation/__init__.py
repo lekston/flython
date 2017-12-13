@@ -24,7 +24,7 @@ class Time:
 
         self._n += 1
 
-        return self.beg + self._n * self.step
+        return (self._n, self.beg + self._n * self.step)
 
     def __iter__(self):
         return self
@@ -43,6 +43,11 @@ class Simulation:
 
     def __init__(self, model):
 
+        print("Running '{}' with '{}' solver, ".format(
+            model.__name__, parameters.solver), end='')
+        print("for t in [{},{}], with step {}.".format(
+            parameters.t_beg, parameters.t_end, parameters.sample_time))
+
         self.model = model
         self.solver = parameters.solver
         self.t = Time(parameters.t_beg,
@@ -54,7 +59,6 @@ class Simulation:
         self.log = Logger(chunk)
 
         for element in self.model.contains:
-            element._manager = self
             # Assign simulation
             if isinstance(element, library.continuous.Continuous):
                 element._solver = None
@@ -62,6 +66,7 @@ class Simulation:
             elif isinstance(element, library.discrete.Discrete):
                 if element.sample_time == -1:
                     element.sample_time = self.t.step
+            element.validate(manager)
 
     def step(self):
         return self.__call__(self.t())
@@ -76,11 +81,15 @@ class Simulation:
     def __call__(self, time):
 
         try:
-            for t in time:
-                self.log(self.model.signal_flow(t))
+            c = 50 / self.t.end
+            for n, t in time:
+                print("\rProgress: [{0:50s}] {1:.1f}%".format(
+                    '#' * int(t * c), t*2*c), end="", flush=True)
+                self.log(self.model.signal_flow(n, t))
         except Exception as exception_message:
-            print("Simulation aborted: '{}'".format(exception_message))
+            print("\nSimulation aborted: '{}'".format(exception_message))
 
+        print("")
         return self.log.data[:self.log.offset]
 
 
