@@ -66,7 +66,7 @@ class Simulation:
             elif isinstance(element, library.discrete.Discrete):
                 if element.sample_time == -1:
                     element.sample_time = self.t.step
-            element.validate(manager)
+            element.validate(self)
 
     def step(self):
         return self.__call__(self.t())
