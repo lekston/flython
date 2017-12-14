@@ -89,14 +89,10 @@ class Simulation:
                 print("\rProgress: [{0:50s}] {1:.1f}%".format(
                     '#' * int(t * c), t*2*c), end="", flush=True)
                 self.log(self.model.signal_flow(t))
-<<<<<<< Updated upstream
-=======
             end_time = timer()
             print("\nSimulation completed. "
                   "Total simulation time: {:.2f} s.".format(
                       end_time - start_time))
-
->>>>>>> Stashed changes
         except Exception as exception_message:
             print("\x1b[2K\rSimulation aborted: "
                   "'{}'".format(exception_message))
