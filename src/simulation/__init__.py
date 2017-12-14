@@ -1,5 +1,7 @@
 import numpy as np
 
+from timeit import default_timer as timer
+
 import library.continuous
 import library.discrete
 import simulation.parameters as parameters
@@ -80,14 +82,25 @@ class Simulation:
 
     def __call__(self, time):
 
+        start_time = timer()
         try:
             c = 50 / self.t.end
             for t in time:
                 print("\rProgress: [{0:50s}] {1:.1f}%".format(
                     '#' * int(t * c), t*2*c), end="", flush=True)
                 self.log(self.model.signal_flow(t))
+<<<<<<< Updated upstream
+=======
+            end_time = timer()
+            print("\nSimulation completed. "
+                  "Total simulation time: {:.2f} s.".format(
+                      end_time - start_time))
+
+>>>>>>> Stashed changes
         except Exception as exception_message:
-            print("Simulation aborted: '{}'".format(exception_message))
+            print("\x1b[2K\rSimulation aborted: "
+                  "'{}'".format(exception_message))
+            print("Exception occurrence: t = {} s.".format(t))
 
         return self.log.data[:self.log.offset]
 

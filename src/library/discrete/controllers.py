@@ -16,7 +16,6 @@ class P(library.discrete.Static):
 
         super().__init__(g=g, **parameters)
 
-
 class PID(library.discrete.NormalOrder):
 
     dtype = [('u', '<f8')]
@@ -89,6 +88,47 @@ class PIrD(library.discrete.NormalOrder):
                           (2 * self.alpha - self.sample_time) /
                           (2 * self.alpha + self.sample_time),
                           2 * self.Kd / (2 * self.alpha + self.sample_time))
+
+
+class PIDRealEuler(library.discrete.NormalOrder):
+
+    dtype = [('u', '<f8')]
+    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'alpha')
+    _default = dict(sample_time=-1)
+
+    def __init__(self, **parameters):
+
+        def f(t, x, u):
+
+            Ci, Cd = self._aux_vars
+
+            # Integration
+            x[0] = x[0] + Ci * u
+
+            # Differentiation
+            yd = Cd * (u - x[2])
+
+            # Exponential smoothing of the differentiated response
+            x[1] = (1 - self.alpha) * x[1] + self.alpha * yd
+
+            # Previous input signal
+            x[2] = u
+
+            return x
+
+        def g(x, u):
+
+            yp = self.Kp * u
+            yi = x[0]
+            yd = x[1]
+
+            return yp + yi + yd
+
+        super().__init__(x=np.zeros(3), f=f, g=g, **parameters)
+
+    def _recalculate_aux_vars(self):
+        self._aux_vars = (self.Ki / self.sample_time,
+                          self.Kd / self.sample_time)
 
 
 class PIDss(library.discrete.ReverseOrder):

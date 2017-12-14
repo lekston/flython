@@ -60,8 +60,8 @@ class NormalOrder(Discrete):
         if t - self.last_call >= self.sample_time:
 
             self.u = u
-            self.y = self.g(self.x, u)
             self.x = self.f(t, self.x, u)
+            self.y = self.g(self.x, u)
             self.last_call = t
 
         return self.y
@@ -74,8 +74,8 @@ class ReverseOrder(Discrete):
         if t - self.last_call >= self.sample_time:
 
             self.u = u
-            self.x = self.f(t, self.x, u)
             self.y = self.g(self.x, u)
+            self.x = self.f(t, self.x, u)
             self.last_call = t
 
         return self.y
