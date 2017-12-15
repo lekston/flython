@@ -1,10 +1,34 @@
+import importlib.util
 import numpy as np
 
 from timeit import default_timer as timer
 
-import library.continuous
-import library.discrete
 import simulation.parameters as parameters
+
+
+def load(model, **parameters):
+
+    import pdb; pdb.set_trace()
+
+    # Load a COPY of the model
+    spec = importlib.util.find_spec(model)
+    model = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(model)
+
+    # Parse COPY of the model
+    # Find and instantiate blocks
+    blocks = [att for att in dir(model) if not att.startswith('_')
+              and isinstance(getattr(model, att), getattr(model, 'Block'))]
+
+    for block in blocks:
+        m, o = getattr(model, block).library.rsplit('.', 1)
+        if block in parameters:
+            p = parameters[block]
+        else:
+            p = getattr(model, block).parameters
+        setattr(model, block, getattr(importlib.import_module(m), o)(**p))
+
+    return model
 
 
 class Time:
@@ -26,7 +50,7 @@ class Time:
 
         self._n += 1
 
-        return self.beg + self._n * self.step
+        return (self._n, self.beg + self._n * self.step)
 
     def __iter__(self):
         return self
@@ -43,10 +67,30 @@ class Time:
 
 class Simulation:
 
-    def __init__(self, model):
+    def __init__(self, model, **prameters):
 
+        # Load a COPY of the model
+        self.model = load(model)
+
+        # Parse a model
+        blocks = [att for att in dir(self.model) if not att.startswith('_')
+                  and isinstance(getattr(self.model, att),
+                                 getattr(self.model, 'Block'))]
+
+        # Instantiate blocks
+        for block in blocks:
+            print(block)
+
+        import pdb; pdb.set_trace()
+
+
+        for name in par:
+
+            setattr(self._module, name, value)
+
+        import pdb; pdb.set_trace()
         print("Running '{}' with '{}' solver, ".format(
-            model.__name__, parameters.solver), end='')
+            model, parameters.solver), end='')
         print("for t in [{},{}], with step {}.".format(
             parameters.t_beg, parameters.t_end, parameters.sample_time))
 
@@ -61,14 +105,7 @@ class Simulation:
         self.log = Logger(chunk)
 
         for element in self.model.contains:
-            element._manager = self
-            # Assign simulation
-            if isinstance(element, library.continuous.Continuous):
-                element._solver = None
-            # Inherit sample_time
-            elif isinstance(element, library.discrete.Discrete):
-                if element.sample_time == -1:
-                    element.sample_time = self.t.step
+            element.validate(self)
 
     def step(self):
         return self.__call__(self.t())
@@ -85,10 +122,10 @@ class Simulation:
         start_time = timer()
         try:
             c = 50 / self.t.end
-            for t in time:
+            for n, t in time:
                 print("\rProgress: [{0:50s}] {1:.1f}%".format(
                     '#' * int(t * c), t*2*c), end="", flush=True)
-                self.log(self.model.signal_flow(t))
+                self.log(self.model(n, t))
             end_time = timer()
             print("\nSimulation completed. "
                   "Total simulation time: {:.2f} s.".format(

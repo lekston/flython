@@ -41,7 +41,7 @@ class Continuous:
         self.u = u
 
         T = []
-        X = []
+        Y = []
         # Run solver (up to the time point t) and store the results
         if not self._solver:
             solver = getattr(scipy.integrate, self._manager.solver)
@@ -56,8 +56,11 @@ class Continuous:
             self._solver.max_step = t - self._solver.t
             self._solver.step()
             T.append((self._solver.t, ))
-            X.append(self._solver.y)
+            Y.append(self._solver.y)
 
         self.x = self._solver.y
 
-        return T, X
+        return T, Y
+
+    def validate(self, manager):
+        self._manager = manager

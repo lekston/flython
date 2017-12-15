@@ -6,9 +6,6 @@ class Discrete:
     def __init__(self, x=None, u=None, f=lambda t, x, u: x, g=lambda
                  x, u: x, **parameters):
 
-        # Attributes initialized by the simulation manager
-        self._manager = None
-
         for name in self._parameters:
             try:
                 setattr(self, name, parameters[name])
@@ -30,19 +27,19 @@ class Discrete:
 
     def __setattr__(self, name, value):
 
-        if name in self._parameters and self._manager:
+        if name in self._parameters and hasattr(self, '_manager'):
             raise Warning("An attempt to change the parameter"
                           "during simulation detected")
 
         super().__setattr__(name, value)
 
-    def _validate(self, manager):
-
+    def validate(self, manager):
+        """Block validation method invoked by the simulation manager"""
         if (self.sample_time / self._manager.t.step) % 1:
             raise ValueError("Incorrect sample time in: '{}'\n"
-                             "The sample time parameter value "
-                             "must be a multiple of the simulation "
-                             "sample time".format(self.__class__.__name__))
+                             "The sample time value must be a multiple"
+                             "of the simulation sample time".format(
+                                 self.__class__.__name__))
 
         self.sampling_factor = self.sample_time / manager.t.step
 
