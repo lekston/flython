@@ -16,9 +16,8 @@ WaypointXYZ = namedtuple('Waypoint', ['x', 'y', 'z'])
 
 class Constant(library.discrete.Static):
 
-    dtype = [('r', '<f8')]
-    _parameters = ['setpoint', 'sample_time']
-    _default = dict(sample_time=-1)
+    _parameters = ('setpoint', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('r', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -30,9 +29,8 @@ class Constant(library.discrete.Static):
 
 class FlightplanXZ(library.discrete.Static):
 
-    dtype = [('xr', '<f8'), ('zr', '<f8')]
-    _parameters = ['plan', 'sample_time']
-    _default = dict(sample_time=-1)
+    _parameters = ('plan', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('xr', '<f8'), ('zr', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -49,9 +47,10 @@ class FlightplanXZ(library.discrete.Static):
 
 class WindfieldXZ(library.discrete.Static):
 
-    dtype = [('Vx', '<f8'), ('Vz', '<f8')]
-    _parameters = ['field', 'scale_factor', 'noise_variance', 'sample_time']
-    _default = dict(scale_factor=1, noise_variance=0, sample_time=-1)
+    _parameters = ('field', 'scale_factor', 'noise_variance',
+                   'sample_time', 'dtype')
+    _default = dict(scale_factor=1, noise_variance=0, sample_time=-1,
+                    dtype=[('Vx', '<f8'), ('Vz', '<f8')])
 
     def __init__(self, **parameters):
 
