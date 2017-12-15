@@ -3,31 +3,6 @@ import numpy as np
 import library.continuous
 
 
-class SimpleMotor(library.continuous.Continuous):
-    """Simple second order model of a DC motor (for testing purposes)"""
-
-    dtype = [('phi', '<f8'), ('dphi', '<f8')]
-    _parameters = ['friction']
-    _default = dict()
-
-    def __init__(self, x, **parameters):
-
-        def f(t, x):
-
-            dx = np.zeros(x.shape)
-            u = self.u
-
-            dx[0] = x[1]
-            dx[1] = u - self.friction*x[1]
-
-            return dx
-
-        def g(x):
-            return x[0]
-
-        super().__init__(x, f=f, g=g, **parameters)
-
-
 class SimplifiedLongitudinalMotion(library.continuous.Continuous):
     """Simplified model of the longitudinal motion.
 
@@ -40,10 +15,9 @@ class SimplifiedLongitudinalMotion(library.continuous.Continuous):
 
     """
 
-    dtype = [('u', '<f8'), ('w', '<f8'), ('q', '<f8'),
-             ('theta', '<f8'), ('x', '<f8'), ('z', '<f8')]
-    _parameters = ['vehicle']
-    _default = dict()
+    _parameters = ('vehicle', 'dtype')
+    _default = dict(dtype=[('u', '<f8'), ('w', '<f8'), ('q', '<f8'),
+                           ('theta', '<f8'), ('x', '<f8'), ('z', '<f8')])
 
     def __init__(self, x, **parameters):
 

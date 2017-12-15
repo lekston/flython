@@ -1,6 +1,6 @@
 import numpy as np
 
-from library.rotations import Rbv, Rbs
+from library.aerospace.rotations import Rbv, Rbs
 
 
 class Birde:
