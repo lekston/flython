@@ -5,9 +5,8 @@ import library.discrete
 
 class P(library.discrete.Static):
 
-    dtype = [('u', '<f8')]
-    _parameters = ('Kp', 'sample_time')
-    _default = dict(sample_time=-1)
+    _parameters = ('Kp', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('u', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -16,11 +15,11 @@ class P(library.discrete.Static):
 
         super().__init__(g=g, **parameters)
 
+
 class PID(library.discrete.NormalOrder):
 
-    dtype = [('u', '<f8')]
-    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time')
-    _default = dict(sample_time=-1)
+    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('u', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -54,9 +53,8 @@ class PID(library.discrete.NormalOrder):
 
 class PIrD(library.discrete.NormalOrder):
 
-    dtype = [('u', '<f8')]
-    _parameters = ('Kp', 'Ki', 'Kd', 'alpha', 'sample_time')
-    _default = dict(alpha=.1, sample_time=-1)
+    _parameters = ('Kp', 'Ki', 'Kd', 'alpha', 'sample_time', 'dtype')
+    _default = dict(alpha=.1, sample_time=-1, dtype=[('u', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -92,9 +90,8 @@ class PIrD(library.discrete.NormalOrder):
 
 class PIDRealEuler(library.discrete.NormalOrder):
 
-    dtype = [('u', '<f8')]
-    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'alpha')
-    _default = dict(sample_time=-1)
+    _parameters = ('Kp', 'Ki', 'Kd',  'alpha', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('u', '<f8')])
 
     def __init__(self, **parameters):
 
@@ -133,9 +130,8 @@ class PIDRealEuler(library.discrete.NormalOrder):
 
 class PIDss(library.discrete.ReverseOrder):
 
-    dtype = [('u', '<f8')]
-    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time')
-    _default = dict(sample_time=-1)
+    _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'dtype')
+    _default = dict(sample_time=-1, dtype=[('u', '<f8')])
 
     def __init__(self, **parameters):
 
