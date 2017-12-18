@@ -8,8 +8,6 @@ import simulation.parameters as parameters
 
 def load(model, **parameters):
 
-    import pdb; pdb.set_trace()
-
     # Load a COPY of the model
     spec = importlib.util.find_spec(model)
     model = importlib.util.module_from_spec(spec)
@@ -69,28 +67,9 @@ class Simulation:
 
     def __init__(self, model, **prameters):
 
-        # Load a COPY of the model
-        self.model = load(model)
-
-        # Parse a model
-        blocks = [att for att in dir(self.model) if not att.startswith('_')
-                  and isinstance(getattr(self.model, att),
-                                 getattr(self.model, 'Block'))]
-
-        # Instantiate blocks
-        for block in blocks:
-            print(block)
-
-        import pdb; pdb.set_trace()
-
-
-        for name in par:
-
-            setattr(self._module, name, value)
-
         import pdb; pdb.set_trace()
         print("Running '{}' with '{}' solver, ".format(
-            model, parameters.solver), end='')
+            model.__name__, parameters.solver), end='')
         print("for t in [{},{}], with step {}.".format(
             parameters.t_beg, parameters.t_end, parameters.sample_time))
 
