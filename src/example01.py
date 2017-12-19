@@ -1,51 +1,60 @@
 #!/opt/local/bin/python
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
-import matplotlib.pyplot as plt
 
 import simulation
 
-from library.continuous.models import SimpleMotor
-from library.discrete.planners import Constant
-from library.discrete.controllers import P
+from library.blocks import BlockDef
 
 # Set simulation parameters
 simulation.parameters.solver = 'RK45'
 simulation.parameters.t_end = 10
 simulation.parameters.sample_time = 1
 
-# Define fmodel
-motor = SimpleMotor(x=np.zeros(2), friction=1)
-controller = P(Kp=1.0)
-planner = Constant(setpoint=1.0)
+# Block definitions
+# Example 1: block definition using arguments
+motor = BlockDef(
+    library='library.examples.Motor',
+    parameters=dict(x=np.zeros(2), friction=1)
+)
+
+# Example 2: block definition using attributes
+planner = BlockDef()
+planner.library = 'library.planners.Constant'
+planner.parameters = dict(setpoint=1.0)
+
+controller = BlockDef()
+controller.library = 'library.controllers.P'
+controller.parameters = dict(Kp=1.0)
 
 
-class Model:
+def signal_flow():
 
-    contains = [motor, controller, planner]
+    phi = motor.y
+    x = motor.x
+    ref = planner(x)
+    err = ref - phi
+    u = controller(err)
+    T, X = motor(u)
 
-    @staticmethod
-    def signal_flow(t):
-
-        phi = motor.y
-        x = motor.x
-        ref = planner(t, x)
-        err = ref - phi
-        u = controller(t, err)
-        T, X = motor(t, u)
-
-        return ([T, [('t', '<f8')]],
-                [X, motor.dtype],
-                [u, controller.dtype],
-                [ref, planner.dtype])
+    return ([T, [('t', '<f8')]],
+            [X, motor.dtype],
+            [u, controller.dtype],
+            [ref, planner.dtype])
 
 
-simdata = simulation.Simulation(Model).run()
+if __name__ == '__main__':
 
-# Plot data
-plt.figure()
-plt.plot(simdata['t'], simdata['phi'], marker='o')
-plt.step(simdata['t'], simdata['u'])
-plt.step(simdata['t'], simdata['r'])
-plt.grid()
-plt.show()
+    import sys
+    import matplotlib.pyplot as plt
+
+    # Run simulation
+    simdata = simulation.Simulation(sys.modules[__name__]).run()
+
+    # Plot data
+    plt.figure()
+    plt.plot(simdata['t'], simdata['phi'], marker='o')
+    plt.step(simdata['t'], simdata['u'])
+    plt.step(simdata['t'], simdata['r'])
+    plt.grid()
+    plt.show()
