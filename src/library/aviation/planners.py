@@ -2,7 +2,7 @@ import numpy as np
 
 from collections import namedtuple
 
-import simulation.blocks.discrete
+import library.blocks.discrete
 
 # Windvectors
 WindvectorXZ = namedtuple('Windvector', ['x', 'Vx', 'Vz'])
@@ -14,7 +14,7 @@ WaypointXY = namedtuple('Waypoint', ['x', 'y'])
 WaypointXYZ = namedtuple('Waypoint', ['x', 'y', 'z'])
 
 
-class Constant(simulation.blocks.discrete.Static):
+class Constant(library.blocks.discrete.Static):
 
     _parameters = ('setpoint', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('r', '<f8')])
@@ -23,7 +23,7 @@ class Constant(simulation.blocks.discrete.Static):
         return self.setpoint
 
 
-class FlightplanXZ(simulation.blocks.discrete.Static):
+class FlightplanXZ(library.blocks.discrete.Static):
 
     _parameters = ('plan', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('xr', '<f8'), ('zr', '<f8')])
@@ -39,7 +39,7 @@ class FlightplanXZ(simulation.blocks.discrete.Static):
         self.zinterp = np.array([waypoint.z for waypoint in self.plan])
 
 
-class WindfieldXZ(simulation.blocks.discrete.Static):
+class WindfieldXZ(library.blocks.discrete.Static):
 
     _parameters = ('field', 'scale_factor', 'noise_variance',
                    'sample_time', 'dtype')
@@ -57,6 +57,7 @@ class WindfieldXZ(simulation.blocks.discrete.Static):
         return V + self.noise_variance * np.random.randn(2)
 
     def _expand(self):
+
         self.xinterp = np.array([windvector.x for windvector in self.field])
         self.Vxinterp = np.array([windvector.Vx for windvector in self.field])
         self.Vzinterp = np.array([windvector.Vz for windvector in self.field])

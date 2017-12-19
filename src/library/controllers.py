@@ -1,7 +1,7 @@
-import simulation.blocks.discrete
+import library.blocks.discrete
 
 
-class P(simulation.blocks.discrete.Static):
+class P(library.blocks.discrete.Static):
 
     _parameters = ('Kp', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('u', '<f8')])
@@ -10,7 +10,7 @@ class P(simulation.blocks.discrete.Static):
         return self.Kp * u
 
 
-class PID(simulation.blocks.discrete.NormalOrder):
+class PID(library.blocks.discrete.NormalOrder):
 
     _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('u', '<f8')])
@@ -41,7 +41,7 @@ class PID(simulation.blocks.discrete.NormalOrder):
                           2 * self.Kd / self.sample_time)
 
 
-class PIrD(simulation.blocks.discrete.NormalOrder):
+class PIrD(library.blocks.discrete.NormalOrder):
 
     _parameters = ('Kp', 'Ki', 'Kd', 'alpha', 'sample_time', 'dtype')
     _default = dict(alpha=.1, sample_time=-1, dtype=[('u', '<f8')])
@@ -74,7 +74,7 @@ class PIrD(simulation.blocks.discrete.NormalOrder):
                           2 * self.Kd / (2 * self.alpha + self.sample_time))
 
 
-class PIDRealEuler(simulation.blocks.discrete.NormalOrder):
+class PIDRealEuler(library.blocks.discrete.NormalOrder):
 
     _parameters = ('Kp', 'Ki', 'Kd',  'alpha', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('u', '<f8')])
@@ -110,7 +110,7 @@ class PIDRealEuler(simulation.blocks.discrete.NormalOrder):
                           self.Kd / self.sample_time)
 
 
-class PIDss(simulation.blocks.discrete.ReverseOrder):
+class PIDss(library.blocks.discrete.ReverseOrder):
 
     _parameters = ('Kp', 'Ki', 'Kd', 'sample_time', 'dtype')
     _default = dict(sample_time=-1, dtype=[('u', '<f8')])
