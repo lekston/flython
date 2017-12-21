@@ -2,29 +2,27 @@
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-import simulation
-
-from library.blocks import BlockDef
+from flython.blockset import block
 
 # Set simulation parameters
-simulation.parameters.solver = 'RK45'
-simulation.parameters.t_end = 10
-simulation.parameters.sample_time = 1
+solver = 'RK45'
+t_end = 10
+sample_time = 1
 
 # Block definitions
 # Example 1: block definition using arguments
-motor = BlockDef(
-    library='library.examples.Motor',
+motor = block.Definition(
+    library='examples.Motor',
     parameters=dict(x=np.zeros(2), friction=1)
 )
 
 # Example 2: block definition using attributes
-planner = BlockDef()
-planner.library = 'library.planners.Constant'
+planner = block.Definition()
+planner.library = 'planners.Constant'
 planner.parameters = dict(setpoint=1.0)
 
-controller = BlockDef()
-controller.library = 'library.controllers.P'
+controller = block.Definition()
+controller.library = 'controllers.P'
 controller.parameters = dict(Kp=1.0)
 
 
@@ -45,11 +43,11 @@ def signal_flow():
 
 if __name__ == '__main__':
 
-    import sys
+    import flython
     import matplotlib.pyplot as plt
 
     # Run simulation
-    simdata = simulation.Simulation(sys.modules[__name__]).run()
+    simdata = flython.load(__file__).run()
 
     # Plot data
     plt.figure()
