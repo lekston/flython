@@ -5,7 +5,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 from types import ModuleType
 
-from flython.blockset import block
+import flython.blockset
 
 
 def pretty_time(t):
@@ -35,6 +35,11 @@ class Simulation:
 
     def __init__(self, model, defaults, **model_blocks_parameters):
 
+        # Reload arguments
+        self._reload_model = model
+        self._reload_defaults = defaults
+        self._reload_model_block_parameters = model_blocks_parameters
+
         # Assign or load a COPY of the model
         if isinstance(model, ModuleType):
             self.model = model
@@ -46,22 +51,22 @@ class Simulation:
 
         # Parse the model
         # Find all block definitions
-        blockdefs = [att for att in dir(self.model) if not att.startswith('_')
-                     and isinstance(getattr(self.model, att),
-                                    block.Definition)]
+        blkdefs = [att for att in dir(self.model) if not att.startswith('_')
+                   and isinstance(getattr(self.model, att),
+                                  flython.blockset.block.Definition)]
         # Create blocks
-        for blockdef in blockdefs:
-            m, o = getattr(self.model, blockdef).library.rsplit('.', 1)
+        for blkdef in blkdefs:
+            m, o = getattr(self.model, blkdef).library.rsplit('.', 1)
             m = 'flython.library.' + m
-            if blockdef in model_blocks_parameters:
-                p = model_blocks_parameters[blockdef]
+            if blkdef in model_blocks_parameters:
+                p = model_blocks_parameters[blkdef]
             else:
-                p = getattr(self.model, blockdef).parameters
+                p = getattr(self.model, blkdef).parameters
             setattr(self.model,
-                    blockdef,
+                    blkdef,
                     getattr(importlib.import_module(m), o)(**p))
         # Remember blocks
-        self.blocks = [getattr(self.model, blockdef) for blockdef in blockdefs]
+        self._blocks = [getattr(self.model, blkdef) for blkdef in blkdefs]
 
         # Inherit simulation parameters
         for att in dir(defaults):
@@ -74,53 +79,62 @@ class Simulation:
 
         # Simulation iter variables
         self.current_step = 0
+        self.t = self.t_beg
         # Estimate total number of simulation steps
         self.total_number_of_steps = round(
             (self.t_end - self.t_beg) / self.sample_time)
 
         # Treat total number of simulation steps may be an estimate of
         # the logger chunk
-        self.chunk = self.total_number_of_steps
+        self._chunk = self.total_number_of_steps
         self.data = None
-        self.offset = 0
+        self._offset = 0
 
     def step(self):
-        data, exec_time = self._call()
-        print("\nStep completed. Total step time: {}.".format(
-            pretty_time(exec_time)))
-        return data
+        return self._call('step')
 
     def run(self, stop_time=None):
         if not stop_time:
-            stop_time = self.t_end
-            msg = ("\nSimulation completed."
-                   " Total simulation time: {}.")
+            return self._call('run')
         else:
-            msg = ("\Run completed."
-                   " Total run time: {}.")
-        data, exec_time = self._call(stop_time)
-        print(msg.format(pretty_time(exec_time)))
-        return data
+            return self._call('run until', stop_time)
 
-    def _call(self, stop_time=None):
+    def reload(self):
+        self.__init__(self._reload_model,
+                      self._reload_defaults,
+                      **self._reload_model_block_parameters)
+
+
+    def _call(self, mode, stop_time=None):
 
         if self.current_step == 0:
             # Validate blocks
-            for block in self.blocks:
+            for block in self._blocks:
                 block.validate(self)
             # Generate running message
             print("Running '{}' with '{}' solver, ".format(
                 Path(self.model.__file__).name, self.solver), end='')
             print("for t in [{},{}], with step {}.".format(
                 self.t_beg, self.t_end, self.sample_time))
+        elif self.current_step >= self.total_number_of_steps:
+            print("Simulation is completed and exhausted. "
+                  "Use reload().")
+            return self.data[:self._offset]
 
-        if not stop_time:
+        if mode == 'step':
             last_step = self.current_step + 1
-        else:
-            last_step = round((stop_time - self.t_beg) / self.sample_time)
-
-        if last_step > self.total_number_of_steps:
+        elif mode == 'run':
             last_step = self.total_number_of_steps
+        else:
+            # Assume run until
+            last_step = round((stop_time - self.t_beg) / self.sample_time)
+            if last_step > self.total_number_of_steps:
+                last_step = self.total_number_of_steps
+            if last_step <= self.current_step:
+                print("Run until t={} ignored. "
+                      "Simulation already at t={}.".format(
+                          pretty_time(stop_time), pretty_time(self.t)))
+                return self.data[:self._offset]
 
         # Adopt first and last step to python 'range'
         first_step = self.current_step + 1
@@ -133,15 +147,27 @@ class Simulation:
                 self.t = self.t_beg + n * self.sample_time
                 print("\rProgress: [{0:50s}] {1:.1f}%".format(
                     '#' * int(n * c), n*2*c), end="", flush=True)
-                self.log(self.model.signal_flow())
+                self._log(self.model.signal_flow())
             end_time = timer()
         except Exception as ex:
             print("\x1b[2K\rProgress: simulation aborted!\n"
                   "{} at t={}s: {}".format(type(ex).__name__, self.t, ex))
 
-        return (self.data[:self.offset], end_time - start_time)
+        if mode == 'step':
+            print("\nStep completed. Total step time: {}.".format(
+                pretty_time(end_time - start_time)))
+        elif mode == 'run':
+            print("\nSimulation completed."
+                  " Total simulation time: {}.".format(
+                      pretty_time(end_time - start_time)))
+        else:
+            print("\nRun until t={} completed."
+                  " Partial run time: {}.".format(
+                      pretty_time(self.t), pretty_time(end_time - start_time)))
 
-    def log(self, data):
+        return self.data[:self._offset]
+
+    def _log(self, data):
 
         # Rearrange data
         array, dtype = None, None
@@ -161,16 +187,16 @@ class Simulation:
 
         # Expand array if necessary
         try:
-            if len(self.data) < self.offset + array.shape[0]:
+            if len(self.data) < self._offset + array.shape[0]:
                 # Expand data
                 self.data = np.append(
-                    self.data, np.empty(self.chunk, self.data.dtype))
+                    self.data, np.empty(self._chunk, self.data.dtype))
         except TypeError:
             # Estimate chunk
-            self.chunk = max(self.chunk, 100*array.shape[0])
+            self._chunk = max(self._chunk, 100*array.shape[0])
             # Create an empty array given the data dtype
-            self.data = np.empty(self.chunk, data.dtype)
+            self.data = np.empty(self._chunk, data.dtype)
 
         # Store data
-        self.data[self.offset:self.offset+array.shape[0]] = data
-        self.offset += array.shape[0]
+        self.data[self._offset:self._offset+array.shape[0]] = data
+        self._offset += array.shape[0]
