@@ -6,8 +6,8 @@ from flython.core import block
 
 # Set simulation parameters
 solver = 'RK45'
-t_end = 200
-sample_time = .01
+t_end = 20
+sample_time = .5
 
 # Block definitions
 # Example 1: block definition using arguments
@@ -23,7 +23,7 @@ planner.parameters = dict(setpoint=1.0)
 
 controller = block.Definition()
 controller.library = 'controllers.PIrD'
-controller.parameters = dict(Kp=1, Ki=0, Kd=2)
+controller.parameters = dict(Kp=1, Ki=0, Kd=.2)
 
 
 def signal_flow():
