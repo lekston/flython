@@ -5,4 +5,4 @@ t_end = 10.0
 sample_time = 0.01
 
 # Verbose switch
-verbose = False
+verbose = True
