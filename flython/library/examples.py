@@ -1,13 +1,13 @@
 from numpy import zeros
 
-from flython.blockset import Continuous
+from flython.core import Continuous
 
 
 class Motor(Continuous):
     """Simple second order model of a DC motor (for testing purposes)"""
 
     _parameters = ('friction', 'dtype')
-    _defaults = dict(dtype=[('phi', '<f8'), ('dphi', '<f8')])
+    _defaults = dict(friction=1, dtype=[('phi', '<f8'), ('dphi', '<f8')])
     _x = zeros(2)
 
     def f(self, t, x):

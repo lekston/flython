@@ -1,6 +1,6 @@
 import numpy as np
 
-from flython.blockset import Continuous
+from flython.core import Continuous
 
 
 class SimplifiedLongitudinalMotion(Continuous):

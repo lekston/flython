@@ -1,8 +1,8 @@
-import flython.parameters as parameters
+import flython.core.parameters as parameters
 
 
 def load(model, **model_block_parameters):
-    from flython.simulation import Simulation
+    from flython.core import Simulation
     return Simulation(model,
                       parameters,
                       **model_block_parameters)

@@ -5,7 +5,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 from types import ModuleType
 
-import flython.blockset
+from .block import Definition
 
 
 def pretty_time(t):
@@ -52,8 +52,7 @@ class Simulation:
         # Parse the model
         # Find all block definitions
         blkdefs = [att for att in dir(self.model) if not att.startswith('_')
-                   and isinstance(getattr(self.model, att),
-                                  flython.blockset.block.Definition)]
+                   and isinstance(getattr(self.model, att), Definition)]
         # Create blocks
         for blkdef in blkdefs:
             m, o = getattr(self.model, blkdef).library.rsplit('.', 1)

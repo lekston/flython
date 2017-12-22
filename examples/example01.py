@@ -2,7 +2,7 @@
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-from flython.blockset import block
+from flython.core import block
 
 # Set simulation parameters
 solver = 'RK45'
