@@ -15,9 +15,10 @@ class SimplifiedLongitudinalMotion(Continuous):
 
     """
 
-    _parameters = ('x', 'vehicle', 'dtype')
-    _default = dict(dtype=[('u', '<f8'), ('w', '<f8'), ('q', '<f8'),
-                           ('theta', '<f8'), ('x', '<f8'), ('z', '<f8')])
+    _parameters = ('vehicle', 'dtype')
+    _defaults = dict(dtype=[('u', '<f8'), ('w', '<f8'), ('q', '<f8'),
+                            ('theta', '<f8'), ('x', '<f8'), ('z', '<f8')])
+    _x = np.zeros(6)
 
     def f(self, t, x):
         """Simplified state-space model of the aircraft longitudinal motion

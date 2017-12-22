@@ -103,7 +103,6 @@ class Simulation:
                       self._reload_defaults,
                       **self._reload_model_block_parameters)
 
-
     def _call(self, mode, stop_time=None):
 
         if self.current_step == 0:
@@ -142,11 +141,12 @@ class Simulation:
         try:
             start_time = timer()
             for n in range(first_step, last_step):
+                t = self.t_beg + n * self.sample_time
                 self.current_step = n
-                self.t = self.t_beg + n * self.sample_time
+                self.t = t
                 print("\rProgress: [{0:50s}] {1:.1f}%".format(
                     '#' * int(n * c), n*2*c), end="", flush=True)
-                self._log(self.model.signal_flow())
+                self._log(self.model.signal_flow(t, n))
             end_time = timer()
         except Exception as ex:
             print("\x1b[2K\rProgress: simulation aborted!\n"

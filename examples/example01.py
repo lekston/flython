@@ -26,7 +26,7 @@ controller.library = 'controllers.PIrD'
 controller.parameters = dict(Kp=1, Ki=0, Kd=.2)
 
 
-def signal_flow():
+def signal_flow(t, n):
 
     phi = motor.y
     x = motor.x
