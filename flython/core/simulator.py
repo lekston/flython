@@ -1,16 +1,23 @@
 import importlib.util
 import numpy as np
+import warnings
 
 from pathlib import Path
 from timeit import default_timer as timer
 from types import ModuleType
 
 from .block import Definition
+from .exception_handler import exception_handler
 
-step_ok = "\nStep completed. Total step time: {}."
-run_ok = "\nSimulation completed. Total simulation time: {0}."
-run_until_ok = "\nRun until t={1} completed. Partial run time: {0}."
-run_until_failed = "Run until t={} failed. Simulation already at t={}."
+
+def _formatwarning(message, category, filename, lineno, file=None, line=None):
+    print(message)
+
+
+warnings.showwarning = _formatwarning
+
+# Event messages
+finished = "Simulation finished. Use reload()."
 
 
 def pretty(t):
@@ -35,13 +42,17 @@ def pretty(t):
             return "{:.4g}ms".format(frac/1000)
 
 
-class Simulation:
-    """Simulation manager"""
+class Simulator:
+    """Simulator class"""
 
+    @exception_handler
     def __init__(self, model, defaults, **model_blocks_parameters):
 
-        # Simulator status
+        # Status
         self.status = 'init'
+
+        # Report active simulator
+        globals()['simulator'] = self
 
         # Reload arguments
         self._reload_model = model
@@ -101,64 +112,85 @@ class Simulation:
         # Initialization completed
         self.status = 'ready'
 
+    def __setattr__(self, name, value):
+        if name is 'warnings_filter':
+            assert value in ("error", "ignore", "always",
+                             "default", "module", "once",
+                             "optional"), "invalid filter: %r".format(value)
+            if value is not "optional":
+                warnings.simplefilter(value)
+
+        super().__setattr__(name, value)
+
     def reload(self):
         self.__init__(self._reload_model,
                       self._reload_defaults,
                       **self._reload_model_block_parameters)
 
-    def run(self,  until=None):
+    def run(self, t_stop=None):
 
-        fromstate = self.status
-        self.status = 'run'
+        if self.status is 'ready':
+            self._start()
+        elif self.status is 'finished':
+            print(finished)
+            return self.data[:self._offset]
 
-        if fromstate is 'ready':
-            self._validate()
+        if t_stop:
+            return self._run_until(t_stop)
         else:
-            self._run(until)
-
-    def _run(self, until=None):
-        if not until:
-            self.last_step = self.total_number_of_steps
-            msg = run_ok
-        else:
-            self.last_step = round((until - self.t_beg) / self.sample_time)
-            msg = run_until_ok
-
-        if self.last_step <= self.current_step:
-            self._run_until_failed(until)
-        else:
-            runtime = self._sim()
-            print(msg.format(pretty(runtime), self.t))
-
-        return self.data[:self._offset]
-
-    def _run_until_failed(self, until):
-        self.status = 'run until failed'
-        print(run_until_failed.format(pretty(until), pretty(self.t)))
+            return self._run()
 
     def step(self):
 
-        fromstate = self.status
-        self.status = 'step'
+        if self.status is 'ready':
+            self._start()
+        elif self.status is 'finished':
+            print(finished)
+            return self.data[:self._offset]
 
-        if fromstate is 'ready':
-            self._validate()
-        elif fromstate is 'finished':
-            self._finished()
-        else:
-            self._step()
+        return self._step()
+
+    def _start(self, *args):
+
+        self.status = 'starting'
+
+        # Perform block validation
+        for block in self._blocks:
+            block.simulator = self
+            block.validate()
+
+        # Generate running message
+        print("Running '{}' with '{}' solver, ".format(
+            Path(self.model.__file__).name, self.solver), end='')
+        print("for t in [{},{}], with step {}.".format(
+            self.t_beg, self.t_end, self.sample_time))
+
+    def _run(self):
+        self.status = 'running'
+        r_ok = "\nSimulation completed. Total simulation time: {}."
+        runtime = self._sim(self.total_number_of_steps)
+        print(r_ok.format(pretty(runtime)))
+        return self.data[:self._offset]
+
+    def _run_until(self, t_stop):
+        self.status = 'running_until'
+        ru_ok = "\nRun until t={} completed. Partial run time: {}."
+        ru_failed = "Run until t={} failed. Simulation already at t={}."
+        last_step = round((t_stop - self.t_beg) / self.sample_time)
+        if last_step <= self.current_step:
+            self.status = 'failed'
+            print(ru_failed.format(pretty(t_stop), pretty(self.t)))
+            return self.data[:self._offset]
+        runtime = self._sim(last_step)
+        print(ru_ok.format(self.t, pretty(runtime)))
+        return self.data[:self._offset]
 
     def _step(self):
         self.status = 'step'
-        self.last_step = self.current_step + 1
-        runtime = self._sim()
-        print(step_ok.format(pretty(runtime)))
+        s_ok = "\nStep completed. Total step time: {}."
+        runtime = self._sim(self.current_step + 1)
+        print(s_ok.format(pretty(runtime)))
         return self.data[:self._offset]
-
-    def _stopped(self):
-        self.status = 'stopped'
-        if self.current_step >= self.total_number_of_steps:
-            self._finished()
 
     def _log(self, data):
 
@@ -194,71 +226,31 @@ class Simulation:
         self.data[self._offset:self._offset+array.shape[0]] = data
         self._offset += array.shape[0]
 
-    def _finished(self, *args):
+    def _sim(self, last_step):
 
-        fromstate = self.status
-        self.status = 'finished'
-
-        if fromstate is 'stopped':
-            return None
+        c = 50 / self.total_number_of_steps
+        start_time = timer()
+        # Adopt first and last step to python 'range'
+        for n in range(self.current_step + 1, last_step + 1):
+            self.current_step = n
+            self.t = self.t_beg + n * self.sample_time
+            print("\rProgress: [{0:50s}] {1:.1f}%".format(
+                '#' * int(n * c), n*2*c), end="", flush=True)
+            self._log(self.model.signal_flow())
+        end_time = timer()
+        # Change status
+        if self.current_step >= self.total_number_of_steps:
+            self.status = 'finished'
         else:
-            print("Simulation finished. Use reload().")
-            return self.data[:self._offset]
-
-    def _sim(self):
-        try:
-            c = 50 / self.total_number_of_steps
-            start_time = timer()
-            # Adopt first and last step to python 'range'
-            for n in range(self.current_step + 1, self.last_step + 1):
-                self.current_step = n
-                self.t = self.t_beg + n * self.sample_time
-                print("\rProgress: [{0:50s}] {1:.1f}%".format(
-                    '#' * int(n * c), n*2*c), end="", flush=True)
-                self._log(self.model.signal_flow())
-            end_time = timer()
-            # Go to stopped
-            self._stopped()
-        except Exception as exc:
-            print("\x1b[2K\rProgress: simulation failed.\n"
-                  "{} at t={}s: {}".format(type(exc).__name__, self.t, exc))
-            self.status = 'failed'
+            self.status = 'active'
 
         return end_time - start_time
 
-    def _validate(self, *args):
-
-        fromstate = self.status
-        self.status = 'validating'
-
-        # Perform block validation
-        for block in self._blocks:
-            block.simulator = self
-            block.validate()
-
-        # Generate running message
-        print("Running '{}' with '{}' solver, ".format(
-            Path(self.model.__file__).name, self.solver), end='')
-        print("for t in [{},{}], with step {}.".format(
-            self.t_beg, self.t_end, self.sample_time))
-
-        self.run = self._run
-        self.step = self._step
-
-        # Change state
-        if fromstate is 'run':
-            self._run(*args)
-        else:
-            self._step()
-
-    def _warn(self, message):
-        import pdb; pdb.set_trace()
-
-        if self.verbose:
-            end = '\n'
-            if self.status is 'run':
-                message = "\x1b[2K\r" + message
-            elif self.status is 'step':
-                message = "\n" + message
-                end = ''
-            print(message, end=end)
+    def warn(self, message):
+        end = '\n'
+        if self.status in ('running', 'running_until'):
+            message = "\x1b[2K\r" + message
+        elif self.status is 'step':
+            message = "\n" + message
+            end = ''
+        warnings.warn("Warning: " + message)

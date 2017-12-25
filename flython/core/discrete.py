@@ -14,7 +14,7 @@ class Discrete(Block):
         if (self.sample_time / self._simulator.sample_time) % 1:
             raise ValueError("Incorrect sample time in block '{}'.\n"
                              "Block sample time should be a multiple of the "
-                             "simulation sample time.".format(self.name))
+                             "simulation sample time.".format(self._name))
 
         self._sample_time_ratio = round(
             self.sample_time / self._simulator.sample_time)

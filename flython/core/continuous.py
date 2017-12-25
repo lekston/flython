@@ -39,7 +39,7 @@ class Continuous(Block):
             T, X = self.__call__(u)
         except RuntimeError:
             self._solver.status = 'running'
-            self._simulator._warn(w1.format(self._solver.t,
-                                            self._solver.max_step))
+            self._simulator.warn(
+                w1.format(self._solver.t, self._solver.max_step))
 
         return T, X

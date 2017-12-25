@@ -1,12 +1,15 @@
-w1 = "Warning: Parameter '{}.{}' changed during simulation."
+w1 = "Parameter '{}.{}' changed during active session."
 
 
 class Block:
 
     def __init__(self, name, simulator, **parameters):
 
-        self._name = name
-        self._simulator = simulator
+        # To avoid interaction with __setattr__ set these attributes
+        # using super().__setattr__
+        super().__setattr__('_name', name)
+        super().__setattr__('_simulator', simulator)
+
         self.u = None
         self.x = parameters.pop('x', self._x if hasattr(self, '_x') else None)
 
@@ -26,11 +29,12 @@ class Block:
                 sub_block._block_init(self)
 
     def __setattr__(self, name, value):
-        if name in self._parameters and (self._simulator.status is 'running' or
-           self._simulator.status is 'stopped'):
-            self._simulator._warn(w1.format(self._name, name))
-            self.validate()
+        # First set parameter then validate its new value
         super().__setattr__(name, value)
+        if name in self._parameters \
+           and self._simulator.status not in ('init', 'ready', 'starting'):
+            self._warn(w1.format(self._name, name))
+            self.validate()
 
     def validate(self):
         """Perform block validation"""
