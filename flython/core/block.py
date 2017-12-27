@@ -32,8 +32,8 @@ class Block:
         # First set parameter then validate its new value
         super().__setattr__(name, value)
         if name in self._parameters \
-           and self._simulator.status not in ('init', 'ready', 'starting'):
-            self._warn(w1.format(self._name, name))
+           and self._simulator.status is 'active':
+            self._simulator.warn(w1.format(self._name, name))
             self.validate()
 
     def validate(self):

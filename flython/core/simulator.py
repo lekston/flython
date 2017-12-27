@@ -7,17 +7,28 @@ from timeit import default_timer as timer
 from types import ModuleType
 
 from .block import Definition
-from .exception_handler import exception_handler
-
-
-def _formatwarning(message, category, filename, lineno, file=None, line=None):
-    print(message)
-
-
-warnings.showwarning = _formatwarning
 
 # Event messages
+start_message = "Running '{}' with '{}' solver, " \
+                "for t in [{},{}], with step {}."
+failed = "Simulation broken. Try to reload a model."
 finished = "Simulation finished. Use reload()."
+simulation_completed = "\nSimulation completed. Total simulation time: {}."
+run_until_ignored = "Run until t={} ignored. Simulation already at t={}."
+run_until_completed = "\nRun until t={} completed. Partial run time: {}."
+step_completed = "\nStep completed. Total step time: {}."
+
+
+def exception_handler(fun):
+
+    def handler(self, *args):
+        try:
+            fun(self, *args)
+        except FileNotFoundError as exc:
+            self.status = 'failed'
+            print("{}: {}".format(type(exc).__name__, exc))
+
+    return handler
 
 
 def pretty(t):
@@ -49,10 +60,7 @@ class Simulator:
     def __init__(self, model, defaults, **model_blocks_parameters):
 
         # Status
-        self.status = 'init'
-
-        # Report active simulator
-        globals()['simulator'] = self
+        super().__setattr__('status', 'init')
 
         # Reload arguments
         self._reload_model = model
@@ -70,8 +78,8 @@ class Simulator:
 
         # Parse the model
         # Find all block definitions
-        blkdefs = [att for att in dir(self.model) if not att.startswith('_')
-                   and isinstance(getattr(self.model, att), Definition)]
+        blkdefs = [a for a in dir(self.model) if not a.startswith('_')
+                   and isinstance(getattr(self.model, a), Definition)]
         # Create blocks
         for blkdef in blkdefs:
             m, o = getattr(self.model, blkdef).library.rsplit('.', 1)
@@ -87,40 +95,44 @@ class Simulator:
         # Remember blocks
         self._blocks = [getattr(self.model, blkdef) for blkdef in blkdefs]
 
-        # Inherit simulation parameters
-        for att in dir(defaults):
-            if att.startswith('_'):
-                continue
-            if hasattr(self.model, att):
-                setattr(self, att, getattr(self.model, att))
+        # Inherit local settings from model or defaults
+        for a in defaults._locals:
+            if hasattr(self.model, a):
+                setattr(self, a, getattr(self.model, a))
             else:
-                setattr(self, att, getattr(defaults, att))
+                setattr(self, a, getattr(defaults, a))
 
+        # Initialization completed
+        self.status = 'ready'
+
+    def __setattr__(self, name, value):
+        if self.status is 'active' and name in self._reload_defaults._locals:
+            self.warn(f"Simulation is active, '{name}' can not be changed.")
+        else:
+            super().__setattr__(name, value)
+
+    def _start(self, *args):
+        # Set status
+        self.status = 'starting'
         # Simulator variables init
         # Estimate total number of simulation steps
         self.t = self.t_beg
         self.current_step = 0
         self.total_number_of_steps = round(
             (self.t_end - self.t_beg) / self.sample_time)
-
         # Treat total number of simulation steps
         # as an estimate of the logger chunk
         self._chunk = self.total_number_of_steps
         self.data = None
         self._offset = 0
-
-        # Initialization completed
-        self.status = 'ready'
-
-    def __setattr__(self, name, value):
-        if name is 'warnings_filter':
-            assert value in ("error", "ignore", "always",
-                             "default", "module", "once",
-                             "optional"), "invalid filter: %r".format(value)
-            if value is not "optional":
-                warnings.simplefilter(value)
-
-        super().__setattr__(name, value)
+        # Perform block validation
+        for block in self._blocks:
+            block.simulator = self
+            block.validate()
+        # Generate start message
+        print(start_message.format(
+            Path(self.model.__file__).name, self.solver,
+            self.t_beg, self.t_end, self.sample_time))
 
     def reload(self):
         self.__init__(self._reload_model,
@@ -128,69 +140,73 @@ class Simulator:
                       **self._reload_model_block_parameters)
 
     def run(self, t_stop=None):
-
+        # Chcek current state
         if self.status is 'ready':
             self._start()
+        elif self.status is 'failed':
+            print(failed)
+            return
         elif self.status is 'finished':
             print(finished)
             return self.data[:self._offset]
-
+        # Perform run / run until
         if t_stop:
-            return self._run_until(t_stop)
+            self._run_until(t_stop)
         else:
-            return self._run()
-
-    def step(self):
-
-        if self.status is 'ready':
-            self._start()
-        elif self.status is 'finished':
-            print(finished)
-            return self.data[:self._offset]
-
-        return self._step()
-
-    def _start(self, *args):
-
-        self.status = 'starting'
-
-        # Perform block validation
-        for block in self._blocks:
-            block.simulator = self
-            block.validate()
-
-        # Generate running message
-        print("Running '{}' with '{}' solver, ".format(
-            Path(self.model.__file__).name, self.solver), end='')
-        print("for t in [{},{}], with step {}.".format(
-            self.t_beg, self.t_end, self.sample_time))
+            self._run()
+        return self.data[:self._offset]
 
     def _run(self):
         self.status = 'running'
-        r_ok = "\nSimulation completed. Total simulation time: {}."
-        runtime = self._sim(self.total_number_of_steps)
-        print(r_ok.format(pretty(runtime)))
-        return self.data[:self._offset]
+        print(simulation_completed.format(
+            pretty(self._sim(self.total_number_of_steps))))
 
     def _run_until(self, t_stop):
-        self.status = 'running_until'
-        ru_ok = "\nRun until t={} completed. Partial run time: {}."
-        ru_failed = "Run until t={} failed. Simulation already at t={}."
+        self.status = 'running until'
         last_step = round((t_stop - self.t_beg) / self.sample_time)
         if last_step <= self.current_step:
-            self.status = 'failed'
-            print(ru_failed.format(pretty(t_stop), pretty(self.t)))
+            self.status = 'active'
+            print(run_until_ignored.format(pretty(t_stop), pretty(self.t)))
+            return
+        print(run_until_completed.format(self.t, pretty(self._sim(last_step))))
+
+    def step(self):
+        # Chcek current state
+        if self.status is 'ready':
+            self._start()
+        elif self.status is 'failed':
+            print(failed)
+            return
+        elif self.status is 'finished':
+            print(finished)
             return self.data[:self._offset]
-        runtime = self._sim(last_step)
-        print(ru_ok.format(self.t, pretty(runtime)))
+        # Perform step
+        self._step()
         return self.data[:self._offset]
 
     def _step(self):
         self.status = 'step'
-        s_ok = "\nStep completed. Total step time: {}."
-        runtime = self._sim(self.current_step + 1)
-        print(s_ok.format(pretty(runtime)))
-        return self.data[:self._offset]
+        print(step_completed.format(pretty(self._sim(self.current_step + 1))))
+
+    def _sim(self, last_step):
+
+        c = 50 / self.total_number_of_steps
+        start_time = timer()
+        # Adopt first and last step to python 'range'
+        for n in range(self.current_step + 1, last_step + 1):
+            self.current_step = n
+            self.t = self.t_beg + n * self.sample_time
+            print("\rProgress: [{0:50s}] {1:.1f}%".format(
+                '#' * int(n * c), n*2*c), end="", flush=True)
+            self._log(self.model.signal_flow())
+        end_time = timer()
+        # Change status
+        if self.current_step >= self.total_number_of_steps:
+            self.status = 'finished'
+        else:
+            self.status = 'active'
+
+        return end_time - start_time
 
     def _log(self, data):
 
@@ -226,31 +242,11 @@ class Simulator:
         self.data[self._offset:self._offset+array.shape[0]] = data
         self._offset += array.shape[0]
 
-    def _sim(self, last_step):
-
-        c = 50 / self.total_number_of_steps
-        start_time = timer()
-        # Adopt first and last step to python 'range'
-        for n in range(self.current_step + 1, last_step + 1):
-            self.current_step = n
-            self.t = self.t_beg + n * self.sample_time
-            print("\rProgress: [{0:50s}] {1:.1f}%".format(
-                '#' * int(n * c), n*2*c), end="", flush=True)
-            self._log(self.model.signal_flow())
-        end_time = timer()
-        # Change status
-        if self.current_step >= self.total_number_of_steps:
-            self.status = 'finished'
-        else:
-            self.status = 'active'
-
-        return end_time - start_time
-
     def warn(self, message):
-        end = '\n'
-        if self.status in ('running', 'running_until'):
-            message = "\x1b[2K\r" + message
+        if self.status in ('running', 'running until'):
+            message = "\x1b[2K\rWarning: " + message
         elif self.status is 'step':
-            message = "\n" + message
-            end = ''
-        warnings.warn("Warning: " + message)
+            message = "\nWarning: " + message + "\033[F"
+        else:
+            message = "Warning: " + message
+        warnings.warn(message)

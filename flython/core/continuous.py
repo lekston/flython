@@ -2,7 +2,7 @@ import scipy.integrate
 
 from .block import Block
 
-w1 = "Warning: Solver failed, t={:g}, max_step={:g}."
+w1 = "Solver failed, t={:g}, max_step={:g}."
 
 
 class Continuous(Block):
