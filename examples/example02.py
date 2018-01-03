@@ -2,7 +2,7 @@
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-from flython.core import block
+from flython import block
 
 from flython.library.planners import WaypointXZ
 from flython.library.aerospace.vehicles import Birde
@@ -15,9 +15,6 @@ sample_time = .01
 # Flight plan definition
 plan = [
     WaypointXZ(0, 0),
-    WaypointXZ(2000, 0),
-    WaypointXZ(3000, 100),
-    WaypointXZ(4000, 100)
 ]
 
 # Initial conditions

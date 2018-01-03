@@ -2,7 +2,7 @@
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-from flython.core import block
+from flython import block
 
 from flython.library.planners import WaypointXZ
 from flython.library.aerospace.vehicles import Birde
@@ -14,10 +14,10 @@ sample_time = .01
 
 # Flight plan definition
 plan = [
-    WaypointXZ(0, 0),
-    WaypointXZ(400, 0),
-    WaypointXZ(800, 20),
-    WaypointXZ(4000, 20)
+    WaypointXZ(0, -40),
+    WaypointXZ(400, -40),
+    WaypointXZ(800, -20),
+    WaypointXZ(4000, -20)
 ]
 
 # Initial conditions
@@ -26,7 +26,7 @@ w0 = 0.085
 q0 = 0
 theta0 = np.deg2rad(1)
 x0 = 0
-z0 = 0
+z0 = -40
 x = np.array([u0, w0, q0, theta0, x0, z0])
 
 # Block definitions
@@ -110,13 +110,14 @@ if __name__ == '__main__':
     f = plt.figure()
 
     # plt.plot(simdata['t'], np.sqrt(u**2 + w**2), marker='o')
-    plt.plot(simdata['x'], -simdata['z'], marker='o',
+    plt.plot(simdata['x'], simdata['z'], marker='o',
              label='Position of a vehicle in vehicle-carried frame')
-    plt.plot(simdata['xr'], -simdata['zr'],
+    plt.plot(simdata['xr'], simdata['zr'],
              label='Reference trajectory')
     plt.xlabel('x coordinate')
     plt.ylabel('z coordinate')
     plt.grid()
+    f.axes[0].invert_yaxis()
     f.axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
                      ncol=3, fancybox=True, shadow=True)
 

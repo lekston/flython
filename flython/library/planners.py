@@ -2,7 +2,7 @@ import numpy as np
 
 from collections import namedtuple
 
-from flython.core import discrete
+from flython import discrete
 
 # Waypoints
 WaypointXZ = namedtuple('Waypoint', ['x', 'z'])
