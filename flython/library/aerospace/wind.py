@@ -2,7 +2,7 @@ import numpy as np
 
 from collections import namedtuple
 
-from flython.core import discrete
+from flython import discrete
 
 # Windvectors
 WindvectorXZ = namedtuple('Windvector', ['x', 'Vx', 'Vz'])

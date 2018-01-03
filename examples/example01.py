@@ -2,7 +2,7 @@
 # This is a simple simulation script, tested in Python 3.6.3
 import numpy as np
 
-from flython.core import block
+from flython import block
 
 # Set simulation parameters
 solver = 'RK45'
@@ -26,7 +26,7 @@ controller.library = 'controllers.PIrD'
 controller.parameters = dict(Kp=1, Ki=0, Kd=.2)
 
 
-def signal_flow():
+def signal_flow(t, n):
 
     phi = motor.y
     x = motor.x

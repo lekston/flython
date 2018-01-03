@@ -1,19 +1,34 @@
 import logging
 
-level = logging.WARNING
-# create logger
+from pathlib import Path
+
+# Create logger
 logger = logging.getLogger('FLYTHON LOG')
-logger.setLevel(level)
+logger.setLevel(logging.DEBUG)
+# handlers instaces
+fh = NotImplemented
+ch = NotImplemented
 
-# create console handler and set level to debug
-ch = logging.StreamHandler()
-ch.setLevel(level)
 
-# create formatter
-formatter = logging.Formatter('%(name)s: %(message)s')
+def file_logger(level):
 
-# add formatter to ch
-ch.setFormatter(formatter)
+    global fh
 
-# add ch to logger
-logger.addHandler(ch)
+    # create file handler and set level to debug
+    if fh is NotImplemented:
+        fh = logging.FileHandler(Path(__file__).parent / 'flython.log')
+        fh.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+        logger.addHandler(fh)
+    fh.setLevel(getattr(logging, level.upper()))
+
+
+def console_logger(level):
+
+    global ch
+
+    # create console handler and set level to warning
+    if ch is NotImplemented:
+        ch = logging.StreamHandler()
+        ch.setFormatter(logging.Formatter('%(name)s: %(message)s'))
+        logger.addHandler(ch)
+    ch.setLevel(getattr(logging, level.upper()))

@@ -1,6 +1,6 @@
 from numpy import zeros
 
-from flython.core import Continuous
+from flython import Continuous
 
 
 class Motor(Continuous):

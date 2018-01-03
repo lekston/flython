@@ -1,6 +1,6 @@
 from numpy import zeros
 
-from flython.core import discrete
+from flython import discrete
 
 
 class P(discrete.Static):

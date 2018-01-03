@@ -95,8 +95,8 @@ class Simulator:
         # Remember blocks
         self._blocks = [getattr(self.model, blkdef) for blkdef in blkdefs]
 
-        # Inherit local settings from model or defaults
-        for a in defaults._locals:
+        # Inherit simulation settings from model or defaults
+        for a in defaults._names:
             if hasattr(self.model, a):
                 setattr(self, a, getattr(self.model, a))
             else:
@@ -106,7 +106,7 @@ class Simulator:
         self.status = 'ready'
 
     def __setattr__(self, name, value):
-        if self.status is 'active' and name in self._reload_defaults._locals:
+        if self.status is 'active' and name in self._reload_defaults._names:
             self.warn(f"Simulation is active, '{name}' can not be changed.")
         else:
             super().__setattr__(name, value)
@@ -194,11 +194,12 @@ class Simulator:
         start_time = timer()
         # Adopt first and last step to python 'range'
         for n in range(self.current_step + 1, last_step + 1):
+            t = self.t_beg + n * self.sample_time
+            self.t = t
             self.current_step = n
-            self.t = self.t_beg + n * self.sample_time
             print("\rProgress: [{0:50s}] {1:.1f}%".format(
                 '#' * int(n * c), n*2*c), end="", flush=True)
-            self._log(self.model.signal_flow())
+            self._log(self.model.signal_flow(t, n))
         end_time = timer()
         # Change status
         if self.current_step >= self.total_number_of_steps:
