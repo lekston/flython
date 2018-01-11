@@ -35,39 +35,29 @@ flightplan = block.Definition(
     library='planners.PlannerXZ',
     parameters=dict(plan=plan, sample_time=.1))
 
-prev_dtheta = 0
-prev_theta_err = 0
+controller = block.Definition(
+    library='controllers.PIDRealEuler',
+    parameters=dict(Kp=.1, Ki=0, Kd=.5, alpha=.005, sample_time=.1))
 
 
 def signal_flow(t, n):
-
-    global prev_dtheta, prev_theta_err
 
     qv, tv, xv, zv = vehicle.x[2:6]
     xr, zr = flightplan(xv)
 
     # Theta controller
-    tr = np.radians(1. + 0.1 * t)
+    tr = np.radians(5)
     if np.rad2deg(tr) > 5:
         tr = np.deg2rad(5)
     elif np.rad2deg(tr) < -20:
         tr = np.deg2rad(-20)
 
     # Pitch controller
-    theta_err = (tr - tv)
+    u = tr - tv
+    qr = controller(u)
 
-    dtheta = (prev_theta_err - theta_err) / .01
-    dtheta_lp = 0.995 * prev_dtheta + 0.005 * dtheta
-    prev_dtheta = dtheta_lp
-    prev_theta_err = theta_err
-    qr = 0.1 * theta_err - 0.5 * dtheta_lp
-
-    # Elevator controller
-    # mr = mcontroller(t, qr - qv)
-
-    # Field of wind
-    # wind_vel = windfield(t, xv)
-    wind_vel = (0,0)
+    # Wind velocity
+    wind_vel = (0, 0)
 
     # External inputs for vehicle
     u = [2.5, qr, *wind_vel]
@@ -90,15 +80,12 @@ if __name__ == '__main__':
     # Run simulation
     simdata = flython.load(__file__).run()
 
-    # Render text using TeX interpreter
-    # plt.rc('text', usetex=True)
-
     # Plot data
     f = plt.figure()
 
     # plt.plot(simdata['t'], np.sqrt(u**2 + w**2), marker='o')
     plt.plot(simdata['x'], -simdata['z'], marker='o',
-             label='Position of a vehicle in vehicle-carried frame')
+             label='Position of a vehicle in earth-fixed frame')
     plt.plot(simdata['xr'], -simdata['zr'],
              label='Reference trajectory')
     plt.xlabel('x coordinate')

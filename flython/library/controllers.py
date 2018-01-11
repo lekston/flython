@@ -112,7 +112,7 @@ class PIDRealEuler(discrete.NormalOrder):
         return yp + yi + yd
 
     def _validate(self):
-        self._aux_vars = (self.Ki / self.sample_time,
+        self._aux_vars = (self.Ki * self.sample_time,
                           self.Kd / self.sample_time)
 
 
