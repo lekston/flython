@@ -1,6 +1,5 @@
 import logging
-
-from pathlib import Path
+import os
 
 # Create logger
 logger = logging.getLogger('FLYTHON LOG')
@@ -16,7 +15,7 @@ def file_logger(level):
 
     # create file handler and set level to debug
     if fh is NotImplemented:
-        fh = logging.FileHandler(Path(__file__).parent / 'flython.log')
+        fh = logging.FileHandler(os.path.dirname(__file__) + '/' + 'flython.log')
         fh.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
         logger.addHandler(fh)
     fh.setLevel(getattr(logging, level.upper()))

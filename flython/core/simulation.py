@@ -1,7 +1,7 @@
 import importlib.util
 import numpy as np
+import os
 
-from pathlib import Path
 from timeit import default_timer as timer
 from types import ModuleType
 
@@ -44,15 +44,17 @@ class Simulation:
         if isinstance(model, ModuleType):
             self.model = model
         else:
-            p = Path(model)
-            spec = importlib.util.spec_from_file_location(p.name, p)
+            path = str(model)
+            spec = importlib.util.spec_from_file_location( os.path.basename(path),
+                                                           os.path.abspath(path) )
+            print(spec)
             self.model = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(self.model)
 
         # Parse the model
         # Find all block definitions
-        blkdefs = [att for att in dir(self.model) if not att.startswith('_')
-                   and isinstance(getattr(self.model, att), Definition)]
+        blkdefs = [attr for attr in dir(self.model)
+                            if isinstance(getattr(self.model, attr), Definition)]
         # Create blocks
         for blkdef in blkdefs:
             m, o = getattr(self.model, blkdef).library.rsplit('.', 1)
@@ -69,8 +71,6 @@ class Simulation:
 
         # Inherit simulation parameters
         for att in dir(defaults):
-            if att.startswith('_'):
-                continue
             if hasattr(self.model, att):
                 setattr(self, att, getattr(self.model, att))
             else:
@@ -111,7 +111,7 @@ class Simulation:
                 block.validate(self)
             # Generate running message
             print("Running '{}' with '{}' solver, ".format(
-                Path(self.model.__file__).name, self.solver), end='')
+                os.path.basename(self.model.__file__), self.solver), end='')
             print("for t in [{},{}], with step {}.".format(
                 self.t_beg, self.t_end, self.sample_time))
         elif self.current_step >= self.total_number_of_steps:

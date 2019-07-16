@@ -3,7 +3,7 @@ import numpy as np
 from .rotations import Rbv, Rbs
 
 
-class Birde:
+class Birdie:
 
     # Mass
     mass = 2.3  # kg

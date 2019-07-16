@@ -29,13 +29,11 @@ class Settings:
         global indent
         line = ''
         for name in dir(self):
-            if name.startswith('_'):
-                continue
-            elif isinstance(getattr(self, name), Settings):
-                line += (indent*'   ' + f'{name}:\n')
+            if isinstance(getattr(self, name), Settings):
+                line += (indent*'   ' + '{}:\n'.format(name))
                 indent += 1
                 for s in str(getattr(self, name)).split('\n'):
-                    line += (f'{s}\n')
+                    line += ('{}\n'.format(s))
                 indent -= 1
             else:
                 line += indent*'   '
@@ -60,16 +58,16 @@ class FlythonSettings(Settings):
             assert value in (
                 "error", "ignore", "always", "default",
                 "module", "once", "interpreter"), \
-                f"Invalid value of {name}: '{value}'"
+                "Invalid value of {}: '{}'".format(name, value)
             if value is not "interpreter":
-                logger.debug(f'parameters.{name}={value}')
+                logger.debug('parameters.{}={}'.format(name, value))
                 warnings.resetwarnings()
                 warnings.simplefilter(value, UserWarning)
         elif name in ('file_logger', 'console_logger'):
             assert value in (
                 "debug", "info", "warning", "error", "critical"), \
-                f"Invalid value of {name}: '{value}'"
+                "Invalid value of {}: '{}'".format(name, value)
             getattr(logger_module, name)(value)
-            logger.debug(f'parameters.{name}={value}')
+            logger.debug('parameters.{}={}'.format(name, value))
 
         super().__setattr__(name, value)

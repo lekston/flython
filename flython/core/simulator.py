@@ -1,8 +1,9 @@
 import importlib.util
 import numpy as np
+import os
+
 import warnings
 
-from pathlib import Path
 from timeit import default_timer as timer
 from types import ModuleType
 
@@ -71,15 +72,20 @@ class Simulator:
         if isinstance(model, ModuleType):
             self.model = model
         else:
-            p = Path(model)
-            spec = importlib.util.spec_from_file_location(p.name, p)
+            path = str(model)
+            spec = importlib.util.spec_from_file_location( os.path.basename(path),
+                                                           os.path.abspath(path) )
+            if spec is None:
+                Exception("Incorrect spec from {}/{}".format(
+                            os.path.parent(path), os.path.basename(path)) )
+ 
             self.model = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(self.model)
 
         # Parse the model
         # Find all block definitions
-        blkdefs = [a for a in dir(self.model) if not a.startswith('_')
-                   and isinstance(getattr(self.model, a), Definition)]
+        blkdefs = [attr for attr in dir(self.model)
+                            if isinstance(getattr(self.model, attr), Definition)]
         # Create blocks
         for blkdef in blkdefs:
             m, o = getattr(self.model, blkdef).library.rsplit('.', 1)
@@ -107,7 +113,7 @@ class Simulator:
 
     def __setattr__(self, name, value):
         if self.status is 'active' and name in self._reload_defaults._names:
-            self.warn(f"Simulation is active, '{name}' can not be changed.")
+            self.warn("Simulation is active, '{}' can not be changed.".format(name))
         else:
             super().__setattr__(name, value)
 
@@ -131,7 +137,7 @@ class Simulator:
             block.validate()
         # Generate start message
         print(start_message.format(
-            Path(self.model.__file__).name, self.solver,
+            os.path.basename(self.model.__file__), self.solver,
             self.t_beg, self.t_end, self.sample_time))
 
     def reload(self):
