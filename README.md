@@ -11,9 +11,10 @@ script can be executed from shell or within an interactive session.
 
 For interactive session mode type
 
-    from flython import api
+$ from flython import api
 
 then prepare the simulation instance using
 
-    instance = api.load('path/to/model.py')
+$ instance = api.load('path/to/model.py')
+$ simdata = instance.run()
 
