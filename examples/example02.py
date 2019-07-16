@@ -5,12 +5,12 @@ import numpy as np
 from flython import block
 
 from flython.library.planners import WaypointXZ
-from flython.library.aerospace.vehicles import Birde
+from flython.library.aerospace.vehicles import Birdie
 
 # Set simulation parameters
 solver = 'RK45'
 t_end = 20
-sample_time = .01
+sample_time = .1
 
 # Flight plan definition
 plan = [
@@ -18,8 +18,8 @@ plan = [
 ]
 
 # Initial conditions
-u0 = 20.8
-w0 = 0.1
+u0 = 20.89
+w0 = 0.085
 q0 = 0
 theta0 = np.deg2rad(1)
 x0 = 0
@@ -29,7 +29,7 @@ x = np.array([u0, w0, q0, theta0, x0, z0])
 # Block definitions
 vehicle = block.Definition(
     library='aerospace.eom.SimplifiedLongitudinalMotion',
-    parameters=dict(x=x, vehicle=Birde))
+    parameters=dict(x=x, vehicle=Birdie))
 
 flightplan = block.Definition(
     library='planners.PlannerXZ',
@@ -46,13 +46,14 @@ def signal_flow(t, n):
     xr, zr = flightplan(xv)
 
     # Theta controller
-    tr = np.radians(5)
+    tr = np.radians(1.2)
+
     if np.rad2deg(tr) > 5:
         tr = np.deg2rad(5)
     elif np.rad2deg(tr) < -20:
         tr = np.deg2rad(-20)
 
-    # Pitch controller
+    # Pitch rate controller
     u = tr - tv
     qr = controller(u)
 
@@ -60,7 +61,7 @@ def signal_flow(t, n):
     wind_vel = (0, 0)
 
     # External inputs for vehicle
-    u = [2.5, qr, *wind_vel]
+    u = [2.2, qr, *wind_vel]
 
     # Vehicle
     T, X = vehicle(u)
@@ -72,7 +73,7 @@ def signal_flow(t, n):
             [(xr, zr), flightplan.dtype])
 
 
-if __name__ == '__main__':
+def run_n_plot():
 
     import flython
     import matplotlib.pyplot as plt
@@ -81,7 +82,8 @@ if __name__ == '__main__':
     simdata = flython.load(__file__).run()
 
     # Plot data
-    f = plt.figure()
+    f = plt.figure(1)
+    f.clear()
 
     # plt.plot(simdata['t'], np.sqrt(u**2 + w**2), marker='o')
     plt.plot(simdata['x'], -simdata['z'], marker='o',
@@ -94,7 +96,8 @@ if __name__ == '__main__':
     f.axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
                      ncol=3, fancybox=True, shadow=True)
 
-    f = plt.figure()
+    f = plt.figure(2)
+    f.clear()
     # plt.plot(simdata['t'], simdata['z'], marker='o')
     u = simdata['u']
     w = simdata['w']
@@ -106,7 +109,8 @@ if __name__ == '__main__':
     f.axes[0].legend()
     plt.grid()
 
-    f = plt.figure()
+    f = plt.figure(3)
+    f.clear()
     plt.plot(simdata['t'], np.rad2deg(np.arctan(w / u)), label=r"$\alpha(t)$")
     plt.plot(simdata['t'], np.rad2deg(simdata['theta']),
              label=r"$\Theta(t)$")
@@ -116,7 +120,8 @@ if __name__ == '__main__':
     f.axes[0].legend()
     plt.grid()
 
-    f = plt.figure()
+    f = plt.figure(4)
+    f.clear()
     plt.plot(simdata['t'], np.rad2deg(np.arctan(w / u)), label=r"$\alpha(t)$")
     plt.plot(simdata['t'], np.rad2deg(simdata['q']),
              label=r"$q(t)$")
@@ -125,4 +130,7 @@ if __name__ == '__main__':
     plt.ylabel(r'$\alpha(t), q(t)$')
     f.axes[0].legend()
     plt.grid()
-    plt.show()
+    plt.show(block=False)
+
+if __name__ == '__main__':
+    run_n_plot()

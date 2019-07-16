@@ -41,7 +41,7 @@ def signal_flow(t, n):
             [ref, planner.dtype])
 
 
-if __name__ == '__main__':
+def run_n_plot():
 
     import flython
     import matplotlib.pyplot as plt
@@ -55,4 +55,8 @@ if __name__ == '__main__':
     plt.step(simdata['t'], simdata['u'])
     plt.step(simdata['t'], simdata['r'])
     plt.grid()
-    plt.show()
+    plt.show(block=False)
+
+
+if __name__ == '__main__':
+    run_n_plot()
